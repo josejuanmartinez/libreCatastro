@@ -1,0 +1,5 @@
+<owl:NamedIndividual rdf:about="http://semantic-datahub.taiger.io/ontologies/GeoCoordinates/####COORDINATES####">
+    <rdf:type rdf:resource="http://semantic-datahub.taiger.io/ontologies/GeoCoordinates"/>
+    <rdfs:label>####COORDINATES####</rdfs:label>
+    <cadaster:located_in rdf:resource="####ADDRESS####"/>
+</owl:NamedIndividual>

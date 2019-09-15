@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+     xmlns:terms="http://purl.org/dc/terms/">
+    <owl:Ontology rdf:about="http://semantic-datahub.taiger.io/ontologies/cadaster">
+    </owl:Ontology>
+
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <!-- OUR TOP CLASSES -->
+    <owl:Class rdf:about="http://semantic-datahub.taiger.io/ontologies/Thing">
+            <rdfs:label>Thing</rdfs:label>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://semantic-datahub.taiger.io/ontologies/Cadaster">
+        <rdfs:subClassOf rdf:resource="http://semantic-datahub.taiger.io/ontologies/Thing"/>
+        <rdfs:label>Cadaster</rdfs:label>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://semantic-datahub.taiger.io/ontologies/Address">
+        <rdfs:subClassOf rdf:resource="http://semantic-datahub.taiger.io/ontologies/Thing"/>
+        <rdfs:label>Address</rdfs:label>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://semantic-datahub.taiger.io/ontologies/Province">
+        <rdfs:subClassOf rdf:resource="http://semantic-datahub.taiger.io/ontologies/Thing"/>
+        <rdfs:label>Province</rdfs:label>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://semantic-datahub.taiger.io/ontologies/City">
+        <rdfs:subClassOf rdf:resource="http://semantic-datahub.taiger.io/ontologies/Thing"/>
+        <rdfs:label>City</rdfs:label>
+    </owl:Class>
+
+    <owl:Class rdf:about="http://semantic-datahub.taiger.io/ontologies/GeoCoordinates">
+        <rdfs:subClassOf rdf:resource="http://semantic-datahub.taiger.io/ontologies/Thing"/>
+        <rdfs:label>Geographical Coordinates</rdfs:label>
+    </owl:Class>
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+
+     ####INDIVIDUALS####
+
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <!-- Left empty -->
+
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <owl:ObjectProperty rdf:about="http://semantic-datahub.taiger.io/ontologies/mentioned_in">
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="http://semantic-datahub.taiger.io/ontologies/located_in">
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="http://semantic-datahub.taiger.io/ontologies/registers">
+    </owl:ObjectProperty>
+
+
+    <!-- Here, for each field of the document, if it has a parent... -->
+</rdf:RDF>

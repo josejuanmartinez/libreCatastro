@@ -1,0 +1,5 @@
+<owl:NamedIndividual rdf:about="http://semantic-datahub.taiger.io/ontologies/City/####CITY####">
+    <rdf:type rdf:resource="http://semantic-datahub.taiger.io/ontologies/City"/>
+    <rdfs:label>####CITY####</rdfs:label>
+    <cadaster:located_in rdf:resource="####PROVINCE####"/>
+</owl:NamedIndividual>
