@@ -1,7 +1,13 @@
 from elasticsearch import Elasticsearch
 
+from src.utils.cadastro_logger import CadastroLogger
+
+logger = CadastroLogger(__name__).logger
+
 
 class ElasticSearchUtils:
+    """Custom class for managing Elastic Search queries"""
+
     def __init__(self):
         pass
 
@@ -25,11 +31,13 @@ class ElasticSearchUtils:
                 }
             }
         }
-        print("Creating 'cadaster' index...")
-        es.indices.create(index='cadaster', body=request_body)
+        logger.info("Creating 'cadaster' index...")
+        res = es.indices.create(index='cadaster', body=request_body)
+        logger.info(res)
 
     @staticmethod
     def remove_index():
         es = Elasticsearch()
+        logger.info("Deleting 'cadaster' index...")
         res = es.indices.delete(index='cadaster', ignore=[400, 404])
-        print(res)
+        logger.info(res)

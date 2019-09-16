@@ -3,12 +3,16 @@ import re
 
 from src.settings import config
 
+from src.utils.cadastro_logger import CadastroLogger
+
+logger = CadastroLogger(__name__).logger
+
 
 class Address:
     def __init__(self, address):
         self.full_address = address
-        print("Full address: {}", self.full_address)
-        print("Separator: {}", config['separator'])
+        logger.info("Full address: {}".format(self.full_address))
+        logger.info("Separator: {}".format(config['separator']))
         self.first_line = None
         self.second_line = None
         self.street = None
@@ -17,10 +21,24 @@ class Address:
         self.province_parentheses = None
         self.province = None
 
+        self.doorway = None
+        self.floor = None
+        self.door = None
+
+        self.site = None
+        self.lot = None
+
         self.first_line = self.get_first_line()
         self.second_line = self.get_second_line()
 
         self.street = self.get_street()
+        self.doorway = self.get_doorway()
+        self.floor = self.get_floor()
+        self.door = self.get_door()
+
+        self.site = self.get_site()
+        self.lot = self.get_lot()
+
         self.cp = self.get_cp()
         self.province_parentheses, self.province = self.get_province()
         self.city = self.get_city()
@@ -44,6 +62,66 @@ class Address:
 
     def get_street(self):
         return self.get_first_line()
+
+    def get_doorway(self):
+        if self.doorway is not None:
+            return self.doorway
+
+        doorway_text = None
+        doorway = re.search(r'Es:([-a-zA-Z0-9]+)', self.get_first_line())
+
+        if doorway:
+            doorway_text = doorway.group(1)
+
+        return doorway_text
+
+    def get_door(self):
+        if self.door is not None:
+            return self.door
+
+        door_text = None
+        door = re.search(r'Pt:([-a-zA-Z0-9]+)', self.get_first_line())
+
+        if door:
+            door_text = door.group(1)
+
+        return door_text
+
+    def get_floor(self):
+        if self.floor is not None:
+            return self.floor
+
+        floor_text = None
+        floor = re.search(r'Pl:([-a-zA-Z0-9]+)', self.get_first_line())
+
+        if floor:
+            floor_text = floor.group(1)
+
+        return floor_text
+
+    def get_site(self):
+        if self.site is not None:
+            return self.site
+
+        site_text = None
+        site = re.search(r'Polígono ([-a-zA-Z0-9]+)', self.get_first_line())
+
+        if site:
+            site_text = site.group(1)
+
+        return site_text
+
+    def get_lot(self):
+        if self.lot is not None:
+            return self.lot
+
+        lot_text = None
+        lot = re.search(r'Parcela ([-a-zA-Z0-9]+)', self.get_first_line())
+
+        if lot:
+            lot_text = lot.group(1)
+
+        return lot_text
 
     def get_cp(self):
         if self.cp is not None:

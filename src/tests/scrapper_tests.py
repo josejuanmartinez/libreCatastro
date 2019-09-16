@@ -2,7 +2,6 @@ import unittest
 
 from src.librecatastro.catastro_scrapper import CadastroScrapper
 from src.utils.elasticsearch_utils import ElasticSearchUtils
-from src.utils.ontology_converter import OntologyConverter
 
 
 class MyTestCase(unittest.TestCase):
@@ -19,10 +18,19 @@ class MyTestCase(unittest.TestCase):
         cadaster = CadastroScrapper.scrap_coord(-3.68, 40.47)
         self.assertEqual(cadaster.cadaster, '2302909VK4820A0001GK')
 
+    def test_coordinate_multiparcela_creates_cadaster_2(self):
+        cadaster = CadastroScrapper.scrap_coord(-0.33, 39.47)
+        self.assertTrue(len(cadaster) > 0)
+
     def test_coordinate_creates_cadaster_and_stores_in_elasticsearch(self):
         cadaster = CadastroScrapper.scrap_coord(-3.68, 40.47)
         cadaster.to_elasticsearch()
         self.assertIsNotNone(cadaster.from_elasticsearch())
+
+    def test_cadaster_site_lot_creates_cadaster_and_sets_site_lot(self):
+        cadaster = CadastroScrapper.scrap_cadaster('45134A02500003')
+        self.assertEqual(cadaster.address.site, '25')
+        self.assertEqual(cadaster.address.lot, '3')
 
     def test_cadaster_full_creates_cadaster(self):
         cadaster = CadastroScrapper.scrap_cadaster('0083101WK2008S0001PD')
@@ -53,30 +61,37 @@ class MyTestCase(unittest.TestCase):
         self.assertIsNotNone(cadaster.from_elasticsearch())
 
     def scrap_random_until_x_times_found(self, times):
-        cadaster_list = CadastroScrapper.scrap_results_random(times)
+        cadaster_list = CadastroScrapper.scrap_results_random_x_times(times)
         self.assertEqual(len(cadaster_list), times)
         return cadaster_list
 
     def test_scrap_random_until_5_found(self):
         self.scrap_random_until_x_times_found(5)
 
-    def test_scrap_random_until_5_is_stores_in_elasticsearch(self):
+    def test_scrap_random_until_5_is_stored_in_elasticsearch(self):
         cadaster_list = self.scrap_random_until_x_times_found(5)
         for cadaster in cadaster_list:
             cadaster.to_elasticsearch()
             self.assertIsNotNone(cadaster.from_elasticsearch())
 
-    def test_scrap_random_until_1_is_stores_in_elasticsearch(self):
+    def test_scrap_random_until_100_is_stored_in_elasticsearch(self):
+        cadaster_list = self.scrap_random_until_x_times_found(100)
+        for cadaster in cadaster_list:
+            cadaster.to_elasticsearch()
+            self.assertIsNotNone(cadaster.from_elasticsearch())
+
+    def test_scrap_random_until_1_is_stored_in_elasticsearch(self):
         cadaster_list = self.scrap_random_until_x_times_found(1)
         for cadaster in cadaster_list:
             cadaster.to_elasticsearch()
             self.assertIsNotNone(cadaster.from_elasticsearch())
 
-    def test_create_ontology_with_one_scrap_result(self):
+    """def test_create_ontology_with_one_scrap_result(self):
         ontology_converter = OntologyConverter()
         results = list()
         results.append(CadastroScrapper.scrap_coord(-3.68, 40.47))
         print(ontology_converter.cadastro_dict_to_ontology(results))
+    """
 
 
 if __name__ == '__main__':

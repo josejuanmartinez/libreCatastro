@@ -24,9 +24,9 @@
             <rdfs:label>Thing</rdfs:label>
     </owl:Class>
 
-    <owl:Class rdf:about="http://semantic-datahub.taiger.io/ontologies/Cadaster">
+    <owl:Class rdf:about="http://semantic-datahub.taiger.io/ontologies/CadasterEntry">
         <rdfs:subClassOf rdf:resource="http://semantic-datahub.taiger.io/ontologies/Thing"/>
-        <rdfs:label>Cadaster</rdfs:label>
+        <rdfs:label>CadasterEntry</rdfs:label>
     </owl:Class>
 
     <owl:Class rdf:about="http://semantic-datahub.taiger.io/ontologies/Address">

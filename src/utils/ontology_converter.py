@@ -69,7 +69,7 @@ class OntologyConverter:
 
                 individuals = ''.join([individuals, province_txt, city_txt, address_txt])
 
-        print(individuals)
+        #print(individuals)
         return individuals
 
 
