@@ -1,0 +1,15 @@
+{
+  "geo_bounding_box": {
+    "ignore_unmapped": true,
+    "location": {
+      "bottom_right": {
+        "lat": 35.264683153268145,
+        "lon": -2.927513122558594
+      },
+      "top_left": {
+        "lat": 35.321008047212080,
+        "lon": -2.972831726074218
+      }
+    }
+  }
+}

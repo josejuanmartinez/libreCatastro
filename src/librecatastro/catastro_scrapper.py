@@ -1,3 +1,4 @@
+import os
 import random
 import re
 import time
@@ -10,23 +11,11 @@ from xml.etree import ElementTree
 from bs4 import BeautifulSoup
 
 from src.librecatastro.domain.cadaster_entry import CadasterEntry
+from src.librecatastro.domain.kibana_geo_bounding_box import KibanaGeoBoundingBox
 from src.settings import config
 
 from src.utils.cadastro_logger import CadastroLogger
 from src.utils.list_utils import ListUtils
-
-"""Constants"""
-
-'''Spain geocoordinates'''
-LONGITUDE = (42896, -180243)  # *1000000
-LATITUDE = (437692, 277255)   # *1000000
-
-'''Scale for scrapping'''
-SCALE = 10000
-
-'''Enumerator for tuple access'''
-MAX = 0
-MIN = 1
 
 '''Catastro web services parametrized'''
 URL = "http://ovc.catastro.meh.es/ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR?SRS=EPSG:4230&Coordenada_X={}&Coordenada_Y={}"
@@ -49,11 +38,25 @@ class CadastroScrapper:
     """ Scrapping main calls """
     @staticmethod
     def scrap_all():
-        for x in range(LONGITUDE[MIN], LONGITUDE[MAX]):
-            for y in range(LATITUDE[MIN], LATITUDE[MAX]):
+        for r, d, files in os.walk(config['coordinates_path']):
+            for file in files:
+                if '.json' in file:
+                    f = open(os.path.join(config['coordinates_path'], file), "r")
+                    content = f.read()
+                    try:
+                        bb = KibanaGeoBoundingBox(content)
+                        coordinates_tuple = bb.get_coordinates_tuple()
+                        CadastroScrapper.scrap_range_of_coordinates(coordinates_tuple[0], coordinates_tuple[1], coordinates_tuple[2], coordinates_tuple[3])
+                    except:
+                        logger.error("{} is not formatted properly. Please take a look at the examples.".format(file))
 
-                x_scaled = x / SCALE
-                y_scaled = y / SCALE
+    @staticmethod
+    def scrap_range_of_coordinates(long_min, long_max, lat_min, lat_max):
+        for x in range(long_min, long_max):
+            for y in range(lat_min, lat_max):
+
+                x_scaled = x / config['scale']
+                y_scaled = y / config['scale']
 
                 ''' Adding to tracking file'''
                 logger.info('{},{}'.format(x_scaled, y_scaled))
@@ -81,16 +84,16 @@ class CadastroScrapper:
                 sleep(5)
 
     @staticmethod
-    def scrap_results_by_time(seconds):
+    def scrap_results_by_time(seconds, lon_min, lon_max, lat_min, lat_max):
         start_time = time.time()
         results = []
 
         finished = False
-        for x in range(LONGITUDE[MIN], LONGITUDE[MAX]):
-            for y in range(LATITUDE[MIN], LATITUDE[MAX]):
+        for x in range(lon_min, lon_max):
+            for y in range(lat_min, lat_max):
 
-                x_scaled = x / SCALE
-                y_scaled = y / SCALE
+                x_scaled = x / config['scale']
+                y_scaled = y / config['scale']
 
                 try:
                     result = CadastroScrapper.scrap_coord(x_scaled, y_scaled)
@@ -122,16 +125,16 @@ class CadastroScrapper:
         return ListUtils.flat(results)
 
     @staticmethod
-    def scrap_results_linear_x_times(times):
+    def scrap_results_linear_x_times(times, lon_min, lon_max, lat_min, lat_max):
         results = []
         counter = times
 
         finished = False
-        for x in range(LONGITUDE[MIN], LONGITUDE[MAX]):
-            for y in range(LATITUDE[MIN], LATITUDE[MAX]):
+        for x in range(lon_min, lon_max):
+            for y in range(lat_min, lat_max):
 
-                x_scaled = x / SCALE
-                y_scaled = y / SCALE
+                x_scaled = x / config['scale']
+                y_scaled = y / config['scale']
 
                 try:
 
@@ -164,15 +167,15 @@ class CadastroScrapper:
         return ListUtils.flat(results)
 
     @staticmethod
-    def scrap_results_random_x_times(times):
+    def scrap_results_random_x_times(times, lon_min, lon_max, lat_min, lat_max):
         results = []
         counter = times
         while counter > 0:
-            x = random.randrange(LONGITUDE[MIN], LONGITUDE[MAX])
-            y = random.randrange(LATITUDE[MIN], LATITUDE[MAX])
+            x = random.randrange(lon_min, lon_max)
+            y = random.randrange(lat_min, lat_max)
 
-            x_scaled = x / SCALE
-            y_scaled = y / SCALE
+            x_scaled = x / config['scale']
+            y_scaled = y / config['scale']
 
             try:
                 cadaster_entry = CadastroScrapper.scrap_coord(x_scaled, y_scaled)

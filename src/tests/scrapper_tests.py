@@ -1,6 +1,9 @@
+import os
 import unittest
 
 from src.librecatastro.catastro_scrapper import CadastroScrapper
+from src.librecatastro.domain.kibana_geo_bounding_box import KibanaGeoBoundingBox
+from src.settings import config
 from src.utils.elasticsearch_utils import ElasticSearchUtils
 
 
@@ -77,7 +80,8 @@ class MyTestCase(unittest.TestCase):
         self.assertIsNotNone(cadaster.from_elasticsearch())
 
     def scrap_random_until_x_times_found(self, times):
-        cadaster_list = CadastroScrapper.scrap_results_random_x_times(times)
+        coord = KibanaGeoBoundingBox.get_coordinate_tuple_from_file(os.path.join(config['coordinates_path'], 'central_peninsulae.json'))
+        cadaster_list = CadastroScrapper.scrap_results_random_x_times(times, coord[0], coord[1], coord[2], coord[3])
         self.assertTrue(len(cadaster_list) >= times)
         return cadaster_list
 

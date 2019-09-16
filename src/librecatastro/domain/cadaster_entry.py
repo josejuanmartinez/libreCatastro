@@ -7,7 +7,7 @@ from src.librecatastro.domain.address import Address
 from src.librecatastro.domain.location import Location
 from src.settings import config
 from src.utils.cadastro_logger import CadastroLogger
-from src.utils.json_enconder import JSONEncoder
+from src.utils.json_encoder import JSONEncoder
 
 logger = CadastroLogger(__name__).logger
 

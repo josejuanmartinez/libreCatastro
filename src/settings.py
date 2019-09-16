@@ -6,5 +6,7 @@ config = {
     "separator": "####",
     "elasticsearch-index": "cadaster",
     "error_log_file": os.path.join(root_path, 'logs', 'log'),
-    "tracking_log_file": os.path.join(root_path, 'logs', 'track')
+    "tracking_log_file": os.path.join(root_path, 'logs', 'track'),
+    "scale": 1000000,
+    "coordinates_path": os.path.join(root_path, 'coordinates')
 }
