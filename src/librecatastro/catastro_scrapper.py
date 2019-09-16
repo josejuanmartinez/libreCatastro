@@ -1,6 +1,8 @@
 import random
 import re
 import time
+import urllib
+from urllib import error
 
 from time import sleep
 from urllib.request import urlopen
@@ -16,12 +18,11 @@ from src.utils.list_utils import ListUtils
 """Constants"""
 
 '''Spain geocoordinates'''
-LONGITUDE = (4289603, -18024300)  # *1000000
-LATITUDE = (43769200, 27725500)   # *1000000
+LONGITUDE = (42896, -180243)  # *1000000
+LATITUDE = (437692, 277255)   # *1000000
 
 '''Scale for scrapping'''
-SCALE = 1000000
-TRUNCATE_RIGHT = 4
+SCALE = 10000
 
 '''Enumerator for tuple access'''
 MAX = 0
@@ -48,13 +49,36 @@ class CadastroScrapper:
     """ Scrapping main calls """
     @staticmethod
     def scrap_all():
-        results = []
-        for j in range(LONGITUDE[MIN], LONGITUDE[MAX]):
-            for i in range(LATITUDE[MIN], LATITUDE[MAX]):
-                result = CadastroScrapper.scrap_coord(i, j)
-                if result is not None:
-                    results.append(result)
-        return ListUtils.flat(results)
+        for x in range(LONGITUDE[MIN], LONGITUDE[MAX]):
+            for y in range(LATITUDE[MIN], LATITUDE[MAX]):
+
+                x_scaled = x / SCALE
+                y_scaled = y / SCALE
+
+                ''' Adding to tracking file'''
+                logger.info('{},{}'.format(x_scaled, y_scaled))
+
+                try:
+
+                    cadaster_list = CadastroScrapper.scrap_coord(x_scaled, y_scaled)
+
+                    for cadaster in cadaster_list:
+                        cadaster.to_elasticsearch()
+
+                except urllib.error.HTTPError as e:
+                    logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
+                    logger.error("=============================================")
+                    logger.error(e, exc_info=True)
+                    logger.error("=============================================")
+                    ''' Could be a service Unavailable or denegation of service'''
+                    sleep(300)
+                except Exception as e:
+                    logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
+                    logger.error("=============================================")
+                    logger.error(e, exc_info=True)
+                    logger.error("=============================================")
+
+                sleep(5)
 
     @staticmethod
     def scrap_results_by_time(seconds):
@@ -62,19 +86,37 @@ class CadastroScrapper:
         results = []
 
         finished = False
-        for j in range(LONGITUDE[MIN], LONGITUDE[MAX]):
-            for i in range(LATITUDE[MIN], LATITUDE[MAX]):
-                if finished:
-                    break
-                result = CadastroScrapper.scrap_coord(i, j)
-                if result is not None:
-                    results.append(result)
-                    now = time.time()
-                    elapsed_time = now - start_time
-                    if elapsed_time > seconds:
-                        finished = True
-                        break
+        for x in range(LONGITUDE[MIN], LONGITUDE[MAX]):
+            for y in range(LATITUDE[MIN], LATITUDE[MAX]):
+
+                x_scaled = x / SCALE
+                y_scaled = y / SCALE
+
+                try:
+                    result = CadastroScrapper.scrap_coord(x_scaled, y_scaled)
+
+                    if result is not None:
+                        results.append(result)
+                        now = time.time()
+                        elapsed_time = now - start_time
+                        if elapsed_time > seconds:
+                            finished = True
+                            break
+
+                except urllib.error.HTTPError as e:
+                    logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
+                    logger.error("=============================================")
+                    logger.error(e, exc_info=True)
+                    logger.error("=============================================")
+                    ''' Could be a service Unavailable or denegation of service'''
+                    sleep(300)
+                except Exception as e:
+                    logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
+                    logger.error("=============================================")
+                    logger.error(e, exc_info=True)
+                    logger.error("=============================================")
                 sleep(5)
+
             if finished:
                 break
         return ListUtils.flat(results)
@@ -89,16 +131,31 @@ class CadastroScrapper:
             for y in range(LATITUDE[MIN], LATITUDE[MAX]):
 
                 x_scaled = x / SCALE
-                x_scaled = str(x_scaled)[:-TRUNCATE_RIGHT]
                 y_scaled = y / SCALE
-                y_scaled = str(y_scaled)[:-TRUNCATE_RIGHT]
-                result = CadastroScrapper.scrap_coord(x_scaled, y_scaled)
-                if result is not None:
-                    results.append(result)
-                    counter -= 1
-                    if counter == 0:
-                        finished = True
-                        break
+
+                try:
+
+                    result = CadastroScrapper.scrap_coord(x_scaled, y_scaled)
+
+                    if result is not None:
+                        results.append(result)
+                        counter -= 1
+                        if counter == 0:
+                            finished = True
+                            break
+
+                except urllib.error.HTTPError as e:
+                    logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
+                    logger.error("=============================================")
+                    logger.error(e, exc_info=True)
+                    logger.error("=============================================")
+                    ''' Could be a service Unavailable or denegation of service'''
+                    sleep(300)
+                except Exception as e:
+                    logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
+                    logger.error("=============================================")
+                    logger.error(e, exc_info=True)
+                    logger.error("=============================================")
                 sleep(5)
 
             if finished:
@@ -115,23 +172,35 @@ class CadastroScrapper:
             y = random.randrange(LATITUDE[MIN], LATITUDE[MAX])
 
             x_scaled = x / SCALE
-            x_scaled = str(x_scaled)[:-TRUNCATE_RIGHT]
             y_scaled = y / SCALE
-            y_scaled = str(y_scaled)[:-TRUNCATE_RIGHT]
-            cadaster_entry = CadastroScrapper.scrap_coord(x_scaled, y_scaled)
 
-            if cadaster_entry is not None:
-                results.append(cadaster_entry)
-                counter -= 1
-                if counter == 0:
-                    break
+            try:
+                cadaster_entry = CadastroScrapper.scrap_coord(x_scaled, y_scaled)
+
+                if len(cadaster_entry) > 0:
+                    results.append(cadaster_entry)
+                    counter -= 1
+                    if counter == 0:
+                        break
+            except urllib.error.HTTPError as e:
+                logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
+                logger.error("=============================================")
+                logger.error(e, exc_info=True)
+                logger.error("=============================================")
+                ''' Could be a service Unavailable or denegation of service'''
+                sleep(300)
+            except Exception as e:
+                logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
+                logger.error("=============================================")
+                logger.error(e, exc_info=True)
+                logger.error("=============================================")
             sleep(5)
 
         #ontology_converter = OntologyConverter()
         #print(ontology_converter.cadastro_dict_to_ontology(results))
-        logger.info("====PROCESSING FINISHED====")
-        logger.info("Results found: {}".format(times))
-        logger.info(results)
+        logger.debug("====PROCESSING FINISHED====")
+        logger.debug("Results found: {}".format(times))
+        #logger.debug(results)
         return ListUtils.flat(results)
 
     """ Scrapping secondary calls """
@@ -163,7 +232,7 @@ class CadastroScrapper:
     @staticmethod
     def scrap_cadaster_full_code(full_cadaster, delimitacion, municipio, x=None, y=None):
         url_ref = URL_REF_FULL.format(full_cadaster, full_cadaster, delimitacion, municipio)
-        logger.info("-->FULL URL for cadastral data: {}".format(url_ref))
+        logger.debug("-->FULL URL for cadastral data: {}".format(url_ref))
         f_ref = urlopen(url_ref)
         data_ref = f_ref.read()
         html = str(data_ref.decode('utf-8'))
@@ -175,7 +244,7 @@ class CadastroScrapper:
         rc_1 = cadaster[0:7]
         rc_2 = cadaster[7:14]
         url_ref = URL_REF.format(rc_1, rc_2)
-        logger.info("-->URL for cadastral data: {}".format(url_ref))
+        logger.debug("[||||||||   ] URL for cadastral data: {}".format(url_ref))
         f_ref = urlopen(url_ref)
         data_ref = f_ref.read()
         html = str(data_ref.decode('utf-8'))
@@ -195,14 +264,14 @@ class CadastroScrapper:
 
         cadasters = []
         if description is None:
-            logger.info("Multiparcela found!")
+            logger.debug("Multiparcela found!")
             ''' Multiparcela with multiple cadasters '''
 
             all_cadasters = parsed_html.findAll("div", {"id": re.compile('heading[0-9]+')})
-            logger.info("->Parcelas found: {}".format(len(all_cadasters)))
+            logger.debug("->Parcelas found: {}".format(len(all_cadasters)))
             for partial_cadaster in all_cadasters:
                 partial_cadaster_ref = partial_cadaster.find("b")
-                logger.info("-->Partial cadaster: {}".format(partial_cadaster_ref.text))
+                logger.debug("-->Partial cadaster: {}".format(partial_cadaster_ref.text))
                 partial_cadaster_text = partial_cadaster_ref.text.strip()
                 cadaster = CadastroScrapper.scrap_cadaster_full_code(partial_cadaster_text, delimitacion, municipio, x, y)
                 cadasters.append(cadaster)
@@ -210,22 +279,22 @@ class CadastroScrapper:
             cadaster = CadastroScrapper.parse_html_parcela(parsed_html, x, y)
             cadasters.append(cadaster)
 
+        logger.debug("[|||||||||||] SUCCESS!")
         return cadasters
 
     @staticmethod
     def scrap_coord(x, y):
-        logger.info("====Longitude: {} Latitude: {}====".format(x, y))
+        logger.debug("====Longitude: {} Latitude: {}====".format(x, y))
         url = URL.format(x, y)
-        logger.info("-->URL for coordinates: {}".format(url))
+        logger.debug("[|||        ]URL for coordinates: {}".format(url))
         f = urlopen(url)
         data = f.read()
         root = ElementTree.fromstring(data)
         pc1 = root.find("{http://www.catastro.meh.es/}coordenadas//{http://www.catastro.meh.es/}coord//{http://www.catastro.meh.es/}pc//{http://www.catastro.meh.es/}pc1")
         pc2 = root.find("{http://www.catastro.meh.es/}coordenadas//{http://www.catastro.meh.es/}coord//{http://www.catastro.meh.es/}pc//{http://www.catastro.meh.es/}pc2")
         if pc1 is None or pc2 is None:
-            return None
+            return []
         else:
-            logger.info("-->FOUND!")
-        cadaster = ''.join([pc1.text,pc2.text])
-
-        return CadastroScrapper.scrap_cadaster(cadaster, x, y)
+            logger.debug("|||||       ] FOUND!")
+            cadaster = ''.join([pc1.text,pc2.text])
+            return CadastroScrapper.scrap_cadaster(cadaster, x, y)

@@ -31,13 +31,13 @@ class ElasticSearchUtils:
                 }
             }
         }
-        logger.info("Creating 'cadaster' index...")
+        logger.debug("Creating 'cadaster' index...")
         res = es.indices.create(index='cadaster', body=request_body)
-        logger.info(res)
+        logger.debug(res)
 
     @staticmethod
     def remove_index():
         es = Elasticsearch()
-        logger.info("Deleting 'cadaster' index...")
+        logger.debug("Deleting 'cadaster' index...")
         res = es.indices.delete(index='cadaster', ignore=[400, 404])
-        logger.info(res)
+        logger.debug(res)

@@ -32,14 +32,15 @@ class CadasterEntry:
         es = Elasticsearch()
         body = json.dumps(self.to_json(), cls=JSONEncoder,sort_keys=True,
                   indent=4, separators=(',', ': '))
-        logger.info("Sending to Elastic Search\n:{}".format(body))
+        #logger.debug("Sending to Elastic Search\n:{}".format(body))
         res = es.index(index=config['elasticsearch-index'], doc_type='cadaster_doc', id=self.cadaster, body=body)
-        logger.info(res)
+        #logger.debug(res)
+
         return res
 
     def from_elasticsearch(self):
         es = Elasticsearch()
         query = '{"query":{"bool":{"must":[{"match":{"cadaster":"' + self.cadaster + '"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"aggs":{}}'
         res = es.search(index=config['elasticsearch-index'], body=query)
-        logger.info(res)
+        #logger.debug(res)
         return res

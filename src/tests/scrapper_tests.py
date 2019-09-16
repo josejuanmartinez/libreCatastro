@@ -90,12 +90,6 @@ class MyTestCase(unittest.TestCase):
             cadaster.to_elasticsearch()
             self.assertIsNotNone(cadaster.from_elasticsearch())
 
-    def test_scrap_random_until_100_is_stored_in_elasticsearch(self):
-        cadaster_list = self.scrap_random_until_x_times_found(100)
-        for cadaster in cadaster_list:
-            cadaster.to_elasticsearch()
-            self.assertIsNotNone(cadaster.from_elasticsearch())
-
     def test_scrap_random_until_1_is_stored_in_elasticsearch(self):
         cadaster_list = self.scrap_random_until_x_times_found(1)
         for cadaster in cadaster_list:
