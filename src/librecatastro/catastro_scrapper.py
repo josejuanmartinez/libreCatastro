@@ -141,6 +141,7 @@ class CadastroScrapper:
         descriptive_data = dict()
         descriptive_data[u'Longitud'] = x
         descriptive_data[u'Latitud'] = y
+
         ''' Parcela '''
         fields = description.find_all('div')
         for field in fields:
@@ -157,7 +158,6 @@ class CadastroScrapper:
                         descriptive_data[field_name] = field_value.encode_contents().decode('utf-8').replace('<br/>',config['separator']).replace('<br>', config['separator'])
 
         cadaster_entry = CadasterEntry(descriptive_data)
-        logger.info(cadaster_entry.to_json())
         return cadaster_entry
 
     @staticmethod

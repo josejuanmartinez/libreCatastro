@@ -1,4 +1,3 @@
-import json
 import re
 
 from src.settings import config
@@ -9,10 +8,11 @@ logger = CadastroLogger(__name__).logger
 
 
 class Address:
+    """ Domain class for storing Address in Catastro format"""
     def __init__(self, address):
         self.full_address = address
-        logger.info("Full address: {}".format(self.full_address))
-        logger.info("Separator: {}".format(config['separator']))
+
+        ''' Initialization in case some data is not present'''
         self.first_line = None
         self.second_line = None
         self.street = None
@@ -28,6 +28,7 @@ class Address:
         self.site = None
         self.lot = None
 
+        ''' NLP search '''
         self.first_line = self.get_first_line()
         self.second_line = self.get_second_line()
 
@@ -159,5 +160,4 @@ class Address:
         return province_parentheses_text, province_text
 
     def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
+        return dict(full_address=self.full_address, first_line=self.first_line, second_line=self.second_line, street=self.street, cp=self.cp, city=self.city, province_parantheses=self.province_parentheses, province=self.province, doorway=self.doorway, floor=self.floor, door=self.door, site=self.site, lot=self.lot)

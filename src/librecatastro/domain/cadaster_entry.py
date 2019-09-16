@@ -7,6 +7,7 @@ from src.librecatastro.domain.address import Address
 from src.librecatastro.domain.location import Location
 from src.settings import config
 from src.utils.cadastro_logger import CadastroLogger
+from src.utils.json_enconder import JSONEncoder
 
 logger = CadastroLogger(__name__).logger
 
@@ -21,16 +22,18 @@ class CadasterEntry:
         self.use = description_data[u'Uso principal'] if u'Uso principal' in description_data else None
         self.surface = description_data[u'Superficie construida'] if u'Superficie construida' in description_data else None
         self.year = description_data[u'Año construcción'] if u'Año construcción' in description_data else None
-        self.location = Location(description_data[u'Longitud'], description_data[u'Latitud']) if u'Longitud' in description_data and u'Latitud' in description_data else None
+        self.location = Location(description_data[u'Longitud'], description_data[u'Latitud'])
         self.timestamp = str(datetime.now())
 
     def to_json(self):
-        return json.dumps(self, default=lambda o: o.__dict__,
-                          sort_keys=True, indent=4)
+        return dict(address=self.address, cadaster=self.cadaster, type=self.type, use=self.use, surface=self.surface, year=self.year, location=self.location, timestamp=self.timestamp)
 
     def to_elasticsearch(self):
         es = Elasticsearch()
-        res = es.index(index=config['elasticsearch-index'], doc_type='cadaster_doc', id=self.cadaster, body=self.to_json())
+        body = json.dumps(self.to_json(), cls=JSONEncoder,sort_keys=True,
+                  indent=4, separators=(',', ': '))
+        logger.info("Sending to Elastic Search\n:{}".format(body))
+        res = es.index(index=config['elasticsearch-index'], doc_type='cadaster_doc', id=self.cadaster, body=body)
         logger.info(res)
         return res
 
