@@ -83,7 +83,7 @@ class CadastroScrapper:
                     logger.error(e, exc_info=True)
                     logger.error("=============================================")
 
-                sleep(2)
+                sleep(5)
 
     @staticmethod
     def scrap_results_by_time(seconds, lon_min, lon_max, lat_min, lat_max):
@@ -120,7 +120,7 @@ class CadastroScrapper:
                     logger.error("=============================================")
                     logger.error(e, exc_info=True)
                     logger.error("=============================================")
-                sleep(2)
+                sleep(5)
 
             if finished:
                 break
@@ -161,7 +161,7 @@ class CadastroScrapper:
                     logger.error("=============================================")
                     logger.error(e, exc_info=True)
                     logger.error("=============================================")
-                sleep(2)
+                sleep(5)
 
             if finished:
                 break
@@ -199,7 +199,7 @@ class CadastroScrapper:
                 logger.error("=============================================")
                 logger.error(e, exc_info=True)
                 logger.error("=============================================")
-            sleep(2)
+            sleep(5)
 
         #ontology_converter = OntologyConverter()
         #print(ontology_converter.cadastro_dict_to_ontology(results))
