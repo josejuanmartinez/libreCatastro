@@ -10,7 +10,7 @@ logger = CadastroLogger(__name__).logger
 class Address:
     """ Domain class for storing Address in Catastro format"""
     def __init__(self, address):
-        self.full_address = address
+        self.full_address = address.strip()
 
         ''' Initialization in case some data is not present'''
         self.first_line = None
@@ -48,18 +48,34 @@ class Address:
         if self.first_line is not None:
             return self.first_line
         second_line = re.search(config['separator'], self.full_address)
-        second_line_span = second_line.span()
 
-        return self.full_address[:second_line_span[0]]
+        new_line_pos = None
+        if second_line:  # From HTML I will get the separation
+            new_line_pos = second_line.span()[0]
+        else:  # From XML not
+            cp = re.search(r'[0-9]{5}', self.full_address)
+            if cp:
+                new_line_pos = cp.span()[0]
+
+        return self.full_address[:new_line_pos].strip() if new_line_pos is not None\
+            else self.full_address
 
     def get_second_line(self):
         if self.second_line is not None:
             return self.second_line
 
         second_line = re.search(config['separator'], self.full_address)
-        second_line_span = second_line.span()
 
-        return self.full_address[second_line_span[1]:]
+        new_line_pos = None
+        if second_line:  # From HTML I will get the separation
+            new_line_pos = second_line.span()[0]
+        else:  # From XML not
+            cp = re.search(r'[0-9]{5}', self.full_address)
+            if cp:
+                new_line_pos = cp.span()[0]
+
+        return self.full_address[new_line_pos:].strip() if new_line_pos is not None \
+            else self.full_address
 
     def get_street(self):
         return self.get_first_line()
