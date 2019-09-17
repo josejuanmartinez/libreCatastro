@@ -40,9 +40,7 @@ class CadastroScrapper:
     def scrap_all(filename=''):
         for r, d, files in os.walk(config['coordinates_path']):
             for file in files:
-                print(file, filename)
                 if '.json' in file and ((filename != '' and file == filename) or filename == ''):
-                        print(file)
                         f = open(os.path.join(config['coordinates_path'], file), "r")
                         content = f.read()
                         try:
