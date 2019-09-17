@@ -37,18 +37,20 @@ class CadastroScrapper:
 
     """ Scrapping main calls """
     @staticmethod
-    def scrap_all():
+    def scrap_all(filename=''):
         for r, d, files in os.walk(config['coordinates_path']):
             for file in files:
-                if '.json' in file:
-                    f = open(os.path.join(config['coordinates_path'], file), "r")
-                    content = f.read()
-                    try:
-                        bb = KibanaGeoBoundingBox(content)
-                        coordinates_tuple = bb.get_coordinates_tuple()
-                        CadastroScrapper.scrap_range_of_coordinates(coordinates_tuple[0], coordinates_tuple[1], coordinates_tuple[2], coordinates_tuple[3])
-                    except:
-                        logger.error("{} is not formatted properly. Please take a look at the examples.".format(file))
+                print(file, filename)
+                if '.json' in file and ((filename != '' and file == filename) or filename == ''):
+                        print(file)
+                        f = open(os.path.join(config['coordinates_path'], file), "r")
+                        content = f.read()
+                        try:
+                            bb = KibanaGeoBoundingBox(content)
+                            coordinates_tuple = bb.get_coordinates_tuple()
+                            CadastroScrapper.scrap_range_of_coordinates(coordinates_tuple[0], coordinates_tuple[1], coordinates_tuple[2], coordinates_tuple[3])
+                        except:
+                            logger.error("{} is not formatted properly. Please take a look at the examples.".format(file))
 
     @staticmethod
     def scrap_range_of_coordinates(long_min, long_max, lat_min, lat_max):
