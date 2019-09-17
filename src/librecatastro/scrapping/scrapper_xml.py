@@ -60,7 +60,7 @@ class ScrapperXML:
                             ''' Adding to tracking file'''
                             logger.info('{},{}'.format(lon, lat))
 
-                            num_scrapping_fails = 5
+                            num_scrapping_fails = 10
 
                             entry = ScrapperXML.get_cadaster_entries_by_address(prov_name, city_name, tv, nv, num)
                             cadaster_entry = CadasterEntryXML(entry, lon, lat)
@@ -167,6 +167,8 @@ class ScrapperXML:
             params['Puerta'] = ''
 
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/Consulta_DNPLOC")
+        logger.debug("[|||||||||| ] URL for entry: {} Params: {}".format(url, params))
+
         response = requests.get(url, params=params)
         xml = response.content
         return xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)

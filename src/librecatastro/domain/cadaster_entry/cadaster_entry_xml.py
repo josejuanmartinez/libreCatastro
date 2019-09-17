@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from src.librecatastro.domain.address import Address
@@ -32,6 +33,12 @@ class CadasterEntryXML(CadasterEntry):
         self.gsurface = config['not_available_via_XML']
         self.constructions = []
         constructions = xml['consulta_dnp']['bico']['lcons']['cons']
+
+        ''' Bad XML design, instead of returning a list with 1 element, it returns
+        the element'''
+        if not isinstance(constructions, list):
+            constructions = [constructions]
+
         for construction in constructions:
             use = construction['lcd']
             doorway = construction['dt']['lourb']['loint']['es']

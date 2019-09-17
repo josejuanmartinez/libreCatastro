@@ -53,7 +53,7 @@ class ScrapperXMLTests(unittest.TestCase):
                                 cadaster['consulta_numerero']['lerr']['err']['cod'] == '43':
                             num_scrapping_fails -= 1
                         else:
-                            num_scrapping_fails = 5
+                            num_scrapping_fails = 10
                             matches += 1
 
                         counter += 1
@@ -94,7 +94,7 @@ class ScrapperXMLTests(unittest.TestCase):
                             coords = ScrapperXML.get_coords_from_cadaster(prov_name, city_name, cadaster_num)
                             lon = coords['consulta_coordenadas']['coordenadas']['coord']['geo']['xcen']
                             lat = coords['consulta_coordenadas']['coordenadas']['coord']['geo']['ycen']
-                            num_scrapping_fails = 5
+                            num_scrapping_fails = 10
 
                             entry = ScrapperXML.get_cadaster_entries_by_address(prov_name, city_name, tv, nv, num)
                             cadaster_entry = CadasterEntryXML(entry, lon, lat)
