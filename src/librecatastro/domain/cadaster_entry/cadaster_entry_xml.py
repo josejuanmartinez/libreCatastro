@@ -14,7 +14,7 @@ logger = CadastroLogger(__name__).logger
 class CadasterEntryXML(CadasterEntry):
     """Cadaster class, that stores all the information about a surface and its properties"""
 
-    def __init__(self, xml, lon, lat, is_property=True):
+    def __init__(self, xml, lon, lat):
 
         self.address = Address(xml['consulta_dnp']['bico']['bi']['ldt'])
 

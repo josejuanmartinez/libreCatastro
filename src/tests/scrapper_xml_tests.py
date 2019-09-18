@@ -1,9 +1,8 @@
-import json
 import unittest
 from time import sleep
 
 from src.librecatastro.domain.cadaster_entry.cadaster_entry_xml import CadasterEntryXML
-from src.librecatastro.scrapping.scrapper_xml import ScrapperXML
+from src.librecatastro.scrapping.format.scrapper_xml import ScrapperXML
 from src.settings import config
 
 

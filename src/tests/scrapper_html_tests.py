@@ -2,7 +2,7 @@ import os
 import unittest
 
 from src.librecatastro.domain.geometry.geo_polygon import GeoPolygon
-from src.librecatastro.scrapping.scrapper_html import ScrapperHTML
+from src.librecatastro.scrapping.format.scrapper_html import ScrapperHTML
 from src.settings import config
 from src.utils.elasticsearch_utils import ElasticSearchUtils
 
