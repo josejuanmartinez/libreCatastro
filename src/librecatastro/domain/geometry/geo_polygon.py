@@ -31,4 +31,7 @@ class GeoPolygon:
         return self.polygon.contains(p)
 
     def get_bounding_box(self):
-        pass
+        if self.polygon is not None:
+            return self.polygon.bounds
+        else:
+            return None

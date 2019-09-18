@@ -11,7 +11,6 @@ from xml.etree import ElementTree
 from bs4 import BeautifulSoup
 
 from src.librecatastro.domain.cadaster_entry.cadaster_entry_html import CadasterEntryHTML
-from src.librecatastro.domain.geometry.geo_bounding_box import GeoBoundingBox
 from src.librecatastro.domain.geometry.geo_polygon import GeoPolygon
 from src.librecatastro.scrapping.scrapper import Scrapper
 from src.settings import config
@@ -33,7 +32,6 @@ class ScrapperHTML(Scrapper):
 
     @classmethod
     def scrap_all_coordinates_files(cls, filenames):
-
         for r, d, files in os.walk(config['coordinates_path']):
             for file in files:
 
@@ -52,15 +50,17 @@ class ScrapperHTML(Scrapper):
     @staticmethod
     def scrap_polygon(polygon):
         bb = polygon.get_bounding_box()
-        lon_min = 0
-        lon_max = 0
-        lat_min = 0
-        lat_max = 0
+        lon_min = int(bb[0] * config['scale'])
+        lon_max = int(bb[2] * config['scale'])
+        lat_min = int(bb[1] * config['scale'])
+        lat_max = int(bb[3] * config['scale'])
         for x in range(lon_min, lon_max):
             for y in range(lat_min, lat_max):
 
                 x_scaled = x / config['scale']
                 y_scaled = y / config['scale']
+                if not polygon.is_point_in_polygon(x_scaled, y_scaled):
+                    continue
 
                 ''' Adding to tracking file'''
                 logger.info('{},{}'.format(x_scaled, y_scaled))
@@ -263,7 +263,11 @@ class ScrapperHTML(Scrapper):
                     descriptive_data[field_name] = field_value.text.strip()
 
         '''Constructions'''
-        constructions = parsed_html.find(id='ctl00_Contenido_tblLocales').find_all('tr')
+        constructions_table = parsed_html.find(id='ctl00_Contenido_tblLocales');
+        if constructions_table is None:
+            constructions = []
+        else:
+            constructions = constructions_table.find_all('tr')
         header = True
         for construction in constructions:
             if header:
@@ -272,8 +276,6 @@ class ScrapperHTML(Scrapper):
             columns = construction.find_all('span')
 
             descriptive_data[u'Construcciones'].append(dict(uso=columns[0].text, escalera=columns[1].text, planta=columns[2].text, puerta=columns[3].text, superficie=columns[4].text, tipo=columns[5].text, fecha=columns[6].text))
-
-
 
         cadaster_entry = CadasterEntryHTML(descriptive_data)
         return cadaster_entry

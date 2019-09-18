@@ -12,6 +12,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args(sys.argv[1:])
     if args.coords:
+        print(args.filenames)
         ScrapperHTML.scrap_all_coordinates_files(args.filenames)
     else:
         ScrapperXML.scrap_all_addresses(args.provinces)

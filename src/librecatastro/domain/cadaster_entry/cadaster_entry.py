@@ -4,7 +4,11 @@ from abc import abstractmethod
 from elasticsearch import Elasticsearch
 
 from src.settings import config
+from src.utils.cadastro_logger import CadastroLogger
 from src.utils.json_encoder import JSONEncoder
+
+'''Logger'''
+logger = CadastroLogger(__name__).logger
 
 
 class CadasterEntry:
@@ -30,18 +34,30 @@ class CadasterEntry:
                           indent=4, separators=(',', ': '))
 
     def to_elasticsearch(self):
-        es = Elasticsearch()
-        body = json.dumps(self.to_json(), cls=JSONEncoder,sort_keys=True,
-                  indent=4, separators=(',', ': '))
+        try:
+            es = Elasticsearch()
+            body = json.dumps(self.to_json(), cls=JSONEncoder,sort_keys=True,
+                    indent=4, separators=(',', ': '))
         #logger.debug("Sending to Elastic Search\n:{}".format(body))
-        res = es.index(index=config['elasticsearch-index'], doc_type='cadaster_doc', id=self.cadaster, body=body)
+            res = es.index(index=config['elasticsearch-index'], doc_type='cadaster_doc', id=self.cadaster, body=body)
         #logger.debug(res)
+        except Exception as e:
+            logger.error(e)
+        finally:
+            es.transport.close()
 
         return res
 
     def from_elasticsearch(self):
-        es = Elasticsearch()
-        query = '{"query":{"bool":{"must":[{"match":{"cadaster":"' + self.cadaster + '"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"aggs":{}}'
-        res = es.search(index=config['elasticsearch-index'], body=query)
-        #logger.debug(res)
+        res = None
+
+        try:
+            es = Elasticsearch()
+            query = '{"query":{"bool":{"must":[{"match":{"cadaster":"' + self.cadaster + '"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"aggs":{}}'
+            res = es.search(index=config['elasticsearch-index'], body=query)
+        except Exception as e:
+            logger.error(e)
+        finally:
+            es.transport.close()
+
         return res

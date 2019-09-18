@@ -158,6 +158,7 @@ class Address:
             return self.city
 
         city_text = self.second_line.replace(self.province_parentheses, '')
+        city_text = city_text.replace(config['separator'],'').strip()
         if self.cp is not None:
             city_text = city_text.replace(self.cp, '')
 

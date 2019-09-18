@@ -89,8 +89,9 @@ class ScrapperHTMLTests(unittest.TestCase):
         self.assertIsNotNone(cadaster.from_elasticsearch())
 
     def scrap_random_until_x_times_found(self, times):
-        coord = GeoBoundingBox.get_bb_from_file(os.path.join(config['coordinates_path'], 'central_peninsulae.json'))
-        cadaster_list = ScrapperHTML.scrap_results_random_x_times(times, coord[0], coord[1], coord[2], coord[3])
+        polygon = GeoPolygon(os.path.join(config['coordinates_path'], 'spain_polygon.json'))
+        coord = polygon.get_bounding_box()
+        cadaster_list = ScrapperHTML.scrap_results_random_x_times(times, int(coord[0]*config['scale']), int(coord[2]*config['scale']), int(coord[1]*config['scale']), int(coord[3]*config['scale']))
         self.assertTrue(len(cadaster_list) >= times)
         return cadaster_list
 
@@ -116,6 +117,10 @@ class ScrapperHTMLTests(unittest.TestCase):
     def test_loading_point_is_not_in_polygon_returns_false(self):
         polygon = GeoPolygon(os.path.join(config['coordinates_path'], 'spain_polygon.json'))
         self.assertFalse(polygon.is_point_in_polygon(lon=-1.9335937500000002, lat=48.31242790407178))
+
+    def test_polygon_has_correct_bounding_box(self):
+        polygon = GeoPolygon(os.path.join(config['coordinates_path'], 'spain_polygon.json'))
+        self.assertIsNotNone(polygon.get_bounding_box())
 
 
 if __name__ == '__main__':
