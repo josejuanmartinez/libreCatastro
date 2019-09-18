@@ -11,7 +11,8 @@ from xml.etree import ElementTree
 from bs4 import BeautifulSoup
 
 from src.librecatastro.domain.cadaster_entry.cadaster_entry_html import CadasterEntryHTML
-from src.librecatastro.domain.kibana_geo_bounding_box import KibanaGeoBoundingBox
+from src.librecatastro.domain.geometry.geo_bounding_box import GeoBoundingBox
+from src.librecatastro.domain.geometry.geo_polygon import GeoPolygon
 from src.librecatastro.scrapping.scrapper import Scrapper
 from src.settings import config
 
@@ -27,43 +28,35 @@ class ScrapperHTML(Scrapper):
 
     def __init__(self):
         super().__init__()
-        pass
 
     """ Scrapping main calls """
 
-    @staticmethod
-    def scrap_all_coordinates_files(filename=''):
+    @classmethod
+    def scrap_all_coordinates_files(cls, filenames):
+
         for r, d, files in os.walk(config['coordinates_path']):
             for file in files:
-                if '.json' in file and ((filename != '' and file == filename) or filename == ''):
-                    f = open(os.path.join(config['coordinates_path'], file), "r")
-                    content = f.read()
-                    try:
-                        bb = KibanaGeoBoundingBox(content)
-                        coordinates_tuple = bb.get_coordinates_tuple()
-                        ScrapperHTML.scrap_range_of_coordinates(coordinates_tuple[0], coordinates_tuple[1],
-                                                                       coordinates_tuple[2], coordinates_tuple[3])
-                    except:
-                        logger.error("{} is not formatted properly. Please take a look at the examples.".format(file))
 
+                if len(filenames) > 0 and file not in filenames:
+                    continue
 
-    @staticmethod
-    def scrap_all_coordinates_files(filename=''):
-        for r, d, files in os.walk(config['coordinates_path']):
-            for file in files:
-                if '.json' in file and ((filename != '' and file == filename) or filename == ''):
-                        f = open(os.path.join(config['coordinates_path'], file), "r")
-                        content = f.read()
-                        try:
-                            bb = KibanaGeoBoundingBox(content)
-                            coordinates_tuple = bb.get_coordinates_tuple()
-                            ScrapperHTML.scrap_range_of_coordinates(coordinates_tuple[0], coordinates_tuple[1], coordinates_tuple[2], coordinates_tuple[3])
-                        except:
-                            logger.error("{} is not formatted properly. Please take a look at the examples.".format(file))
+                if '.json' not in file:
+                    continue
+
+                try:
+                    polygon = GeoPolygon(os.path.join(config['coordinates_path'], file))
+                    ScrapperHTML.scrap_polygon(polygon)
+                except:
+                    logger.error("{} is not formatted properly. Please take a look at the examples.".format(file))
 
     @staticmethod
-    def scrap_range_of_coordinates(long_min, long_max, lat_min, lat_max):
-        for x in range(long_min, long_max):
+    def scrap_polygon(polygon):
+        bb = polygon.get_bounding_box()
+        lon_min = 0
+        lon_max = 0
+        lat_min = 0
+        lat_max = 0
+        for x in range(lon_min, lon_max):
             for y in range(lat_min, lat_max):
 
                 x_scaled = x / config['scale']
@@ -83,16 +76,17 @@ class ScrapperHTML(Scrapper):
                     logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
                     logger.error("=============================================")
                     logger.error(e, exc_info=True)
+                    logger.error("...sleeping...")
                     logger.error("=============================================")
                     ''' Could be a service Unavailable or denegation of service'''
-                    sleep(300)
+                    sleep(config['sleep_dos_time'])
                 except Exception as e:
                     logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
                     logger.error("=============================================")
                     logger.error(e, exc_info=True)
                     logger.error("=============================================")
 
-                sleep(5)
+                sleep(config['sleep_time'])
 
     @staticmethod
     def scrap_results_by_time(seconds, lon_min, lon_max, lat_min, lat_max):
@@ -123,13 +117,13 @@ class ScrapperHTML(Scrapper):
                     logger.error(e, exc_info=True)
                     logger.error("=============================================")
                     ''' Could be a service Unavailable or denegation of service'''
-                    sleep(300)
+                    sleep(config['sleep_dos_time'])
                 except Exception as e:
                     logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
                     logger.error("=============================================")
                     logger.error(e, exc_info=True)
                     logger.error("=============================================")
-                sleep(5)
+                sleep(config['sleep_time'])
 
             if finished:
                 break
@@ -164,13 +158,13 @@ class ScrapperHTML(Scrapper):
                     logger.error(e, exc_info=True)
                     logger.error("=============================================")
                     ''' Could be a service Unavailable or denegation of service'''
-                    sleep(300)
+                    sleep(config['sleep_dos_time'])
                 except Exception as e:
                     logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
                     logger.error("=============================================")
                     logger.error(e, exc_info=True)
                     logger.error("=============================================")
-                sleep(5)
+                sleep(config['sleep_time'])
 
             if finished:
                 break
@@ -202,19 +196,16 @@ class ScrapperHTML(Scrapper):
                 logger.error(e, exc_info=True)
                 logger.error("=============================================")
                 ''' Could be a service Unavailable or denegation of service'''
-                sleep(300)
+                sleep(config['sleep_dos_time'])
             except Exception as e:
                 logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
                 logger.error("=============================================")
                 logger.error(e, exc_info=True)
                 logger.error("=============================================")
-            sleep(5)
+            sleep(config['sleep_time'])
 
-        #ontology_converter = OntologyConverter()
-        #print(ontology_converter.cadastro_dict_to_ontology(results))
         logger.debug("====PROCESSING FINISHED====")
         logger.debug("Results found: {}".format(times))
-        #logger.debug(results)
         return ListUtils.flat(results)
 
     @staticmethod

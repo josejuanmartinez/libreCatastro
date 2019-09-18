@@ -16,6 +16,6 @@ services:
     ports:
       - "9200:9200"
   kibana:
-    image: docker.elastic.co/kibana/kibana:6.3.2
+    image: docker.elastic.co/geometry/geometry:6.3.2
     ports:
       - "5601:5601"

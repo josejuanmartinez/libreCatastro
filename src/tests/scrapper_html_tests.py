@@ -1,8 +1,11 @@
 import os
 import unittest
 
+from shapely.geometry import Point
+
+from src.librecatastro.domain.geometry.geo_polygon import GeoPolygon
 from src.librecatastro.scrapping.scrapper_html import ScrapperHTML
-from src.librecatastro.domain.kibana_geo_bounding_box import KibanaGeoBoundingBox
+from src.librecatastro.domain.geometry.geo_bounding_box import GeoBoundingBox
 from src.settings import config
 from src.utils.elasticsearch_utils import ElasticSearchUtils
 
@@ -86,7 +89,7 @@ class ScrapperHTMLTests(unittest.TestCase):
         self.assertIsNotNone(cadaster.from_elasticsearch())
 
     def scrap_random_until_x_times_found(self, times):
-        coord = KibanaGeoBoundingBox.get_coordinate_tuple_from_file(os.path.join(config['coordinates_path'], 'central_peninsulae.json'))
+        coord = GeoBoundingBox.get_bb_from_file(os.path.join(config['coordinates_path'], 'central_peninsulae.json'))
         cadaster_list = ScrapperHTML.scrap_results_random_x_times(times, coord[0], coord[1], coord[2], coord[3])
         self.assertTrue(len(cadaster_list) >= times)
         return cadaster_list
@@ -105,6 +108,15 @@ class ScrapperHTMLTests(unittest.TestCase):
         for cadaster in cadaster_list:
             cadaster.to_elasticsearch()
             self.assertIsNotNone(cadaster.from_elasticsearch())
+
+    def test_loading_point_is_in_polygon_returns_true(self):
+        polygon = GeoPolygon(os.path.join(config['coordinates_path'], 'spain_polygon.json'))
+        self.assertTrue(polygon.is_point_in_polygon(lon=-5.295410156250001, lat=40.069664523297774))
+
+    def test_loading_point_is_not_in_polygon_returns_false(self):
+        polygon = GeoPolygon(os.path.join(config['coordinates_path'], 'spain_polygon.json'))
+        self.assertFalse(polygon.is_point_in_polygon(lon=-1.9335937500000002, lat=48.31242790407178))
+
 
 if __name__ == '__main__':
     unittest.main()

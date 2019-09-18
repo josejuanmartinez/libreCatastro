@@ -1,10 +1,3 @@
-import re
-from urllib.request import urlopen
-
-from bs4 import BeautifulSoup
-
-from src.librecatastro.domain.cadaster_entry.cadaster_entry_html import CadasterEntryHTML
-from src.settings import config
 from src.utils.cadastro_logger import CadastroLogger
 
 '''Logger'''
