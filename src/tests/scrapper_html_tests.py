@@ -1,11 +1,8 @@
 import os
 import unittest
 
-from shapely.geometry import Point
-
 from src.librecatastro.domain.geometry.geo_polygon import GeoPolygon
 from src.librecatastro.scrapping.scrapper_html import ScrapperHTML
-from src.librecatastro.domain.geometry.geo_bounding_box import GeoBoundingBox
 from src.settings import config
 from src.utils.elasticsearch_utils import ElasticSearchUtils
 
