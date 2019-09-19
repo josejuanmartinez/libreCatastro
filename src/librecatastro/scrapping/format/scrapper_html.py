@@ -25,6 +25,7 @@ class ScrapperHTML(Scrapper):
 
     '''Catastro web services parametrized'''
     URL = "http://ovc.catastro.meh.es/ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR?SRS=EPSG:4230&Coordenada_X={}&Coordenada_Y={}"
+
     URL_REF = "https://www1.sedecatastro.gob.es/CYCBienInmueble/OVCListaBienes.aspx?rc1={}&rc2={}"
     URL_REF_FULL = "https://www1.sedecatastro.gob.es/CYCBienInmueble/OVCConCiud.aspx?RefC={}&RCCompleta={}&del={}&mun={}"
 
@@ -32,10 +33,9 @@ class ScrapperHTML(Scrapper):
     description_field_names = [u'Referencia catastral', u'Localización', u'Clase', u'Uso principal', u'Superficie construida', u'Año construcción']
     gsurface_field_names = [u'Superficie gráfica']
 
-    """ Coordinates scrapping calls """
-
+    """ Scrapping calls """
     @classmethod
-    def scrap_coord(cls, x, y):
+    def scrap_coord(cls, x, y, pictures=False):
         logger.debug("====Longitude: {} Latitude: {}====".format(x, y))
         url = cls.URL.format(x, y)
         logger.debug("[|||        ] URL for coordinates: {}".format(url))
@@ -51,19 +51,19 @@ class ScrapperHTML(Scrapper):
         else:
             logger.debug("|||||       ] FOUND!")
             cadaster = ''.join([pc1.text, pc2.text])
-            cadaster_entries = cls.scrap_cadaster(cadaster, x, y)
+            cadaster_entries = cls.scrap_cadaster(cadaster, None, None, x, y, pictures)
             for cadaster_entry in cadaster_entries:
                 cadaster_entry.to_elasticsearch()
-
+            return cadaster_entries
 
     @classmethod
-    def scrap_provinces(cls, prov_list):
+    def scrap_provinces(cls, prov_list, pictures=False):
         """Scraps properties by addresses"""
-
         provinces = cls.get_provinces()['consulta_provinciero']['provinciero']['prov']
 
         for province in provinces:
             prov_name = province['np']
+            prov_num = province['cpine']
 
             if len(prov_list) > 0 and prov_name not in prov_list:
                 continue
@@ -71,6 +71,7 @@ class ScrapperHTML(Scrapper):
             cities = cls.get_cities(prov_name)['consulta_municipiero']['municipiero']['muni']
             for city in cities:
                 city_name = city['nm']
+                city_num = city['locat']['cmc']
                 addresses = (cls.get_addresses(prov_name, city_name)['consulta_callejero']['callejero'][
                     'calle'])
 
@@ -109,7 +110,7 @@ class ScrapperHTML(Scrapper):
 
                                     num_scrapping_fails = 10
 
-                                    cadaster_list = cls.scrap_cadaster(cadaster_num, lon, lat)
+                                    cadaster_list = cls.scrap_cadaster(cadaster_num, prov_num, city_num, lon, lat, pictures)
 
                                     for cadaster in cadaster_list:
                                         cadaster.to_elasticsearch()
@@ -139,18 +140,81 @@ class ScrapperHTML(Scrapper):
                         counter += 1
                         sleep(config['sleep_time'])
 
+    @classmethod
+    def scrap_cadaster_full_code(cls, full_cadaster, delimitacion, municipio, x=None, y=None, picture=None):
+        url_ref = cls.URL_REF_FULL.format(full_cadaster, full_cadaster, delimitacion, municipio)
+        logger.debug("-->FULL URL for cadastral data: {}".format(url_ref))
+        f_ref = urlopen(url_ref)
+        data_ref = f_ref.read()
+        html = str(data_ref.decode('utf-8'))
+        parsed_html = BeautifulSoup(html, features="html.parser")
+        return ScrapperHTML.parse_html_parcela(parsed_html, x, y, picture)
+
+    @classmethod
+    def scrap_cadaster(cls, cadaster, delimitacion=None, municipio=None, x=None, y=None, pictures=False):
+        rc_1 = cadaster[0:7]
+        rc_2 = cadaster[7:14]
+        url_ref = cls.URL_REF.format(rc_1, rc_2)
+
+        logger.debug("[||||||||   ] URL for cadastral data: {}".format(url_ref))
+
+        f_ref = urlopen(url_ref)
+        data_ref = f_ref.read()
+        html = str(data_ref.decode('utf-8'))
+        parsed_html = BeautifulSoup(html, features="html.parser")
+
+        if delimitacion is None:
+            delimitacion_search = re.search(r'del=([0-9]+)&', html)
+            if delimitacion_search:
+                delimitacion = delimitacion_search.group(1)
+
+        if municipio is None:
+            municipio_search = re.search(r'mun=([0-9]+)&', html)
+            if municipio_search:
+                municipio = municipio_search.group(1)
+
+        picture = None
+        if pictures:
+            picture = cls.scrap_site_picture(delimitacion, municipio, ''.join([rc_1, rc_2]))
+            sleep(config['sleep_time'])
+
+        description = parsed_html.find(id='ctl00_Contenido_tblInmueble')
+
+        cadasters = []
+        if description is None:
+            logger.debug("Multiparcela found!")
+            ''' Multiparcela with multiple cadasters '''
+
+            all_cadasters = parsed_html.findAll("div", {"id": re.compile('heading[0-9]+')})
+            logger.debug("->Parcelas found: {}".format(len(all_cadasters)))
+            for partial_cadaster in all_cadasters:
+                partial_cadaster_ref = partial_cadaster.find("b")
+                logger.debug("-->Partial cadaster: {}".format(partial_cadaster_ref.text))
+                partial_cadaster_text = partial_cadaster_ref.text.strip()
+                cadaster = ScrapperHTML.scrap_cadaster_full_code(partial_cadaster_text, delimitacion, municipio, x, y, picture)
+                cadasters.append(cadaster)
+                sleep(config['sleep_time'])
+
+        else:
+            cadaster = ScrapperHTML.parse_html_parcela(parsed_html, x, y, picture)
+
+            cadasters.append(cadaster)
+
+        logger.debug("[|||||||||||] SUCCESS!")
+        sleep(config['sleep_time'])
+        return cadasters
 
     """ Parsing """
 
     @classmethod
-    def parse_html_parcela(cls, parsed_html, x=None, y=None):
+    def parse_html_parcela(cls, parsed_html, x=None, y=None, picture=None):
         description = parsed_html.find(id='ctl00_Contenido_tblInmueble')
 
         descriptive_data = dict()
         descriptive_data[u'Longitud'] = x
         descriptive_data[u'Latitud'] = y
+        descriptive_data[u'GráficoParcela'] = picture
         descriptive_data[u'Construcciones'] = []
-
 
         ''' Datos descriptivos and Parcela Catastral '''
         fields = description.find_all('div')
@@ -177,7 +241,7 @@ class ScrapperHTML(Scrapper):
                     descriptive_data[field_name] = field_value.text.strip()
 
         '''Constructions'''
-        constructions_table = parsed_html.find(id='ctl00_Contenido_tblLocales');
+        constructions_table = parsed_html.find(id='ctl00_Contenido_tblLocales')
         if constructions_table is None:
             constructions = []
         else:
@@ -193,62 +257,3 @@ class ScrapperHTML(Scrapper):
 
         cadaster_entry = CadasterEntryHTML(descriptive_data)
         return cadaster_entry
-
-    @classmethod
-    def scrap_cadaster_full_code(cls, full_cadaster, delimitacion, municipio, x=None, y=None):
-        url_ref = cls.URL_REF_FULL.format(full_cadaster, full_cadaster, delimitacion, municipio)
-        logger.debug("-->FULL URL for cadastral data: {}".format(url_ref))
-        f_ref = urlopen(url_ref)
-        data_ref = f_ref.read()
-        html = str(data_ref.decode('utf-8'))
-        parsed_html = BeautifulSoup(html, features="html.parser")
-        return ScrapperHTML.parse_html_parcela(parsed_html, x, y)
-
-    @classmethod
-    def scrap_cadaster(cls, cadaster, x=None, y=None):
-        rc_1 = cadaster[0:7]
-        rc_2 = cadaster[7:14]
-        url_ref = cls.URL_REF.format(rc_1, rc_2)
-
-        logger.debug("[||||||||   ] URL for cadastral data: {}".format(url_ref))
-
-        f_ref = urlopen(url_ref)
-        data_ref = f_ref.read()
-        html = str(data_ref.decode('utf-8'))
-        parsed_html = BeautifulSoup(html, features="html.parser")
-
-        delimitacion = ''
-        delimitacion_search = re.search(r'del=([0-9]+)&', html)
-        if delimitacion_search:
-            delimitacion = delimitacion_search.group(1)
-
-        municipio = ''
-        municipio_search = re.search(r'mun=([0-9]+)&', html)
-        if municipio_search:
-            municipio = municipio_search.group(1)
-
-        description = parsed_html.find(id='ctl00_Contenido_tblInmueble')
-
-        cadasters = []
-        if description is None:
-            logger.debug("Multiparcela found!")
-            ''' Multiparcela with multiple cadasters '''
-
-            all_cadasters = parsed_html.findAll("div", {"id": re.compile('heading[0-9]+')})
-            logger.debug("->Parcelas found: {}".format(len(all_cadasters)))
-            for partial_cadaster in all_cadasters:
-                partial_cadaster_ref = partial_cadaster.find("b")
-                logger.debug("-->Partial cadaster: {}".format(partial_cadaster_ref.text))
-                partial_cadaster_text = partial_cadaster_ref.text.strip()
-                cadaster = ScrapperHTML.scrap_cadaster_full_code(partial_cadaster_text, delimitacion, municipio, x, y)
-
-                sleep(config['sleep_time'])
-
-                cadasters.append(cadaster)
-        else:
-            cadaster = ScrapperHTML.parse_html_parcela(parsed_html, x, y)
-            cadasters.append(cadaster)
-
-        logger.debug("[|||||||||||] SUCCESS!")
-        sleep(config['sleep_time'])
-        return cadasters

@@ -3,6 +3,7 @@ import unittest
 
 from src.librecatastro.domain.geometry.geo_polygon import GeoPolygon
 from src.librecatastro.scrapping.format.scrapper_html import ScrapperHTML
+from src.librecatastro.scrapping.source.coordinates_input import CoordinatesInput
 from src.settings import config
 from src.utils.elasticsearch_utils import ElasticSearchUtils
 
@@ -23,7 +24,7 @@ class ScrapperHTMLTests(unittest.TestCase):
         cadaster = cadaster_list[0]
         self.assertEqual(cadaster.cadaster, '2302909VK4820A0001GK')
 
-    def test_coordinate_multiparcela_creates_cadaster_2(self):
+    def test_coordinate_multiparcela_creates_cadaster(self):
         cadaster_list = ScrapperHTML.scrap_coord(-0.33, 39.47)
         self.assertTrue(len(cadaster_list) > 1)
 
@@ -88,7 +89,7 @@ class ScrapperHTMLTests(unittest.TestCase):
     def scrap_random_until_x_times_found(self, times):
         polygon = GeoPolygon(os.path.join(config['coordinates_path'], 'spain_polygon.json'))
         coord = polygon.get_bounding_box()
-        cadaster_list = ScrapperHTML.scrap_results_random_x_times(times, int(coord[0]*config['scale']), int(coord[2]*config['scale']), int(coord[1]*config['scale']), int(coord[3]*config['scale']))
+        cadaster_list = CoordinatesInput.scrap_results_random_x_times(times, int(coord[0]*config['scale']), int(coord[2]*config['scale']), int(coord[1]*config['scale']), int(coord[3]*config['scale']), ScrapperHTML)
         self.assertTrue(len(cadaster_list) >= times)
         return cadaster_list
 
@@ -118,6 +119,10 @@ class ScrapperHTMLTests(unittest.TestCase):
     def test_polygon_has_correct_bounding_box(self):
         polygon = GeoPolygon(os.path.join(config['coordinates_path'], 'spain_polygon.json'))
         self.assertIsNotNone(polygon.get_bounding_box())
+
+    def test_if_pictures_enabled_picture_is_set(self):
+        cadaster_list = ScrapperHTML.scrap_cadaster('06145A00500028', pictures=True)
+        self.assertIsNotNone(cadaster_list[0].picture)
 
 
 if __name__ == '__main__':

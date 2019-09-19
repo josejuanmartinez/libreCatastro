@@ -11,5 +11,7 @@ config = {
     "coordinates_path": os.path.join(root_path, 'coordinates'),
     "not_available_via_XML": "(Not available via XML)",
     "sleep_time": 5,
-    "sleep_dos_time": 300
+    "sleep_dos_time": 300,
+    "width_px": 120,
+    "height_px": 120
 }

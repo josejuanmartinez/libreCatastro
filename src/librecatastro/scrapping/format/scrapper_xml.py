@@ -25,7 +25,7 @@ class ScrapperXML(Scrapper):
     """ Scrapping main calls """
 
     @classmethod
-    def scrap_coord(cls, x, y):
+    def scrap_coord(cls, x, y, pictures=False):
         """Scraps properties by coordinates"""
         params = {'SRS': 'EPSG:4230', 'Coordenada_X': x, 'Coordenada_Y': y}
         url = cls.URL_LOCATIONS_BASE.format("/OVCCoordenadas.asmx/Consulta_RCCOOR")
@@ -43,15 +43,15 @@ class ScrapperXML(Scrapper):
             pc2 = xml_dict['consulta_coordenadas']['coordenadas']['coord']['pc']['pc2'] if 'pc' in xml_dict['consulta_coordenadas']['coordenadas']['coord'] else None
         if pc1 is not None and pc2 is not None:
             logger.debug("|||||       ] FOUND!")
-            entry = cls.get_cadaster_entries_by_cadaster('', '', ''.join([pc1,pc2]))
 
+            entry = cls.get_cadaster_entries_by_cadaster('', '', ''.join([pc1,pc2]))
             cadaster_entry = CadasterEntryXML(entry, x, y)
             cadaster_entry.to_elasticsearch()
             logger.debug("[|||||||||||] SUCCESS!")
             sleep(config['sleep_time'])
 
     @classmethod
-    def scrap_provinces(cls, prov_list):
+    def scrap_provinces(cls, prov_list, pictures=False):
         """Scraps properties by addresses"""
 
         provinces = ScrapperXML.get_provinces()['consulta_provinciero']['provinciero']['prov']

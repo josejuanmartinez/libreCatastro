@@ -1,8 +1,11 @@
+import base64
 import urllib.parse
+from urllib.request import urlopen
 
 import requests
 import xmltodict
 
+from src.settings import config
 from src.utils.cadastro_logger import CadastroLogger
 
 '''Logger'''
@@ -15,15 +18,17 @@ class Scrapper:
     '''Catastro web services parametrized'''
     URL_LOCATIONS_BASE = "http://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC{}"
 
+    URL_PICTURES = "https://www1.sedecatastro.gob.es/Cartografia/GeneraGraficoParcela.aspx?del={}&mun={}&refcat={}&AnchoPixels={}&AltoPixels={}"
+
     def __init__(self):
         pass
 
     @classmethod
-    def scrap_coords(cls, x, y):
+    def scrap_coords(cls, x, y, pictures=False):
         pass
 
     @classmethod
-    def scrap_provinces(cls, prov_list):
+    def scrap_provinces(cls, prov_list, pictures=False):
         pass
 
     @classmethod
@@ -135,3 +140,18 @@ class Scrapper:
         response = requests.get(url, params=params)
         xml = response.content
         return xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)
+
+    @classmethod
+    def scrap_site_picture(cls, prov_name, city_name, cadaster):
+        url_pic = cls.URL_PICTURES.format(prov_name, city_name, cadaster, config['width_px'], config['height_px'])
+
+        logger.debug("[||||||||   ] URL for picture data: {}".format(url_pic))
+
+        f_pic = urlopen(url_pic)
+
+        data_ref = f_pic.read()
+
+        b64_image = base64.b64encode(data_ref).decode('utf-8')
+
+        return b64_image
+

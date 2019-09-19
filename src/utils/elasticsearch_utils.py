@@ -27,8 +27,23 @@ class ElasticSearchUtils:
                         "location": {
                             "type": "geo_point"
                         }
-                    }
-                }
+                    },
+                    "dynamic_templates": [
+                        {
+                            "strings": {
+                                "match_mapping_type": "string",
+                                "mapping": {
+                                    "type": "text",
+                                    "fields": {
+                                        "keyword": {
+                                            "type": "keyword"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
             }
         }
         logger.debug("Creating 'cadaster' index...")

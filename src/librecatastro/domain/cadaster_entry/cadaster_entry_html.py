@@ -22,6 +22,7 @@ class CadasterEntryHTML(CadasterEntry):
         self.location = Location(description_data[u'Longitud'], description_data[u'Latitud'])
         self.gsurface = description_data[u'Superficie gráfica'] if u'Superficie gráfica' in description_data else None
         self.constructions = [Construction(x) for x in description_data[u'Construcciones']]
+        self.picture = description_data[u'GráficoParcela'] if u'GráficoParcela' in description_data else None
         self.timestamp = str(datetime.now())
         super().__init__(self)
 
