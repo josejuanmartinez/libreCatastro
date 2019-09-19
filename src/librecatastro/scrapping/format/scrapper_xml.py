@@ -35,10 +35,9 @@ class ScrapperXML(Scrapper):
         logger.debug("[|||        ] URL for coordinates: {}".format(url + '?' + urllib.parse.urlencode(params)))
 
         xml = response.content
-        xml_dict =  xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)
+        xml_dict = xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)
         pc1 = None
         pc2 = None
-        print(json.dumps(xml_dict))
         if 'coordenadas' in xml_dict['consulta_coordenadas'] and 'coord' in xml_dict['consulta_coordenadas']['coordenadas']:
             pc1 = xml_dict['consulta_coordenadas']['coordenadas']['coord']['pc']['pc1'] if 'pc' in xml_dict['consulta_coordenadas']['coordenadas']['coord'] else None
             pc2 = xml_dict['consulta_coordenadas']['coordenadas']['coord']['pc']['pc2'] if 'pc' in xml_dict['consulta_coordenadas']['coordenadas']['coord'] else None
@@ -49,6 +48,7 @@ class ScrapperXML(Scrapper):
             cadaster_entry = CadasterEntryXML(entry, x, y)
             cadaster_entry.to_elasticsearch()
             logger.debug("[|||||||||||] SUCCESS!")
+            sleep(config['sleep_time'])
 
     @classmethod
     def scrap_provinces(cls, prov_list):

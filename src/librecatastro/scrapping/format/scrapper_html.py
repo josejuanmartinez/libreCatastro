@@ -240,12 +240,15 @@ class ScrapperHTML(Scrapper):
                 partial_cadaster_ref = partial_cadaster.find("b")
                 logger.debug("-->Partial cadaster: {}".format(partial_cadaster_ref.text))
                 partial_cadaster_text = partial_cadaster_ref.text.strip()
-                cadaster = ScrapperHTML.scrap_cadaster_full_code(partial_cadaster_text, delimitacion, municipio,
-                                                                        x, y)
+                cadaster = ScrapperHTML.scrap_cadaster_full_code(partial_cadaster_text, delimitacion, municipio, x, y)
+
+                sleep(config['sleep_time'])
+
                 cadasters.append(cadaster)
         else:
             cadaster = ScrapperHTML.parse_html_parcela(parsed_html, x, y)
             cadasters.append(cadaster)
 
         logger.debug("[|||||||||||] SUCCESS!")
+        sleep(config['sleep_time'])
         return cadasters
