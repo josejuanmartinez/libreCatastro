@@ -124,10 +124,28 @@ class ScrapperXMLTests(unittest.TestCase):
             self.assertIsNotNone(cadaster_entry.from_elasticsearch())
             sleep(config['sleep_time'])
 
-    def test_multiparcela_creates_n_entries(self):
+    def test_multiparcela_coord_creates_n_entries(self):
         lon = -9.2503
         lat = 42.9723
         self.assertEqual(len(ScrapperXML.scrap_coord(lon, lat, True)), 2)
+
+    def test_multiparcela_address_creates_n_entries(self):
+        prov_name = u'MADRID'
+        city_name = u'AJALVIR'
+        tv = u'CL'
+        nv = u'CANARIAS'
+        num = 7
+        cadaster = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
+        self.assertEqual(len(ScrapperXML.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 8)
+
+    def test_multiparcela_address_creates_n_entries_2(self):
+        prov_name = u'MADRID'
+        city_name = u'AJALVIR'
+        tv = u'CL'
+        nv = u'CALVARIO'
+        num = 38
+        cadaster = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
+        self.assertEqual(len(ScrapperXML.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 8)
 
 
 if __name__ == '__main__':

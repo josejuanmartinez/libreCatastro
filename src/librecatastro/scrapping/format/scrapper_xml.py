@@ -74,17 +74,18 @@ class ScrapperXML(Scrapper):
                 if not isinstance(parcelas, list):
                     parcelas = [parcelas]
                 for parcela in parcelas:
-                    if pictures:
-                        prov_num = parcela.dt.loine.cp
-                        city_num = parcela.dt.cmc
-                        if prov_num != DotMap() and city_num != DotMap():
-                            picture = cls.scrap_site_picture(prov_num, city_num, ''.join([pc1, pc2]))
 
                     cadaster = parcela.rc.pc1 if parcela.rc.pc1 != DotMap() else ''
                     cadaster += parcela.rc.pc2 if parcela.rc.pc2 != DotMap() else ''
                     cadaster += parcela.rc.car if parcela.rc.car != DotMap() else ''
                     cadaster += parcela.rc.cc1 if parcela.rc.cc1 != DotMap() else ''
                     cadaster += parcela.rc.cc2 if parcela.rc.cc2 != DotMap() else ''
+
+                    if pictures:
+                        prov_num = parcela.dt.loine.cp
+                        city_num = parcela.dt.cmc
+                        if prov_num != DotMap() and city_num != DotMap():
+                            picture = cls.scrap_site_picture(prov_num, city_num, cadaster)
 
                     parcela = cls.get_cadaster_entries_by_cadaster('', '', cadaster)
                     cadaster_entry = CadasterEntryXML(parcela, x, y, picture)
@@ -106,7 +107,7 @@ class ScrapperXML(Scrapper):
             while num_scrapping_fails > 0:
                 try:
                     cadaster = cls.get_cadaster_by_address(prov_name, city_name, tv, nv, counter)
-                    res = cls.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, pictures)
+                    res = cls.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, counter, pictures)
                     if len(res) < 1:
                         num_scrapping_fails -= 1
                     else:
@@ -136,7 +137,7 @@ class ScrapperXML(Scrapper):
                 sleep(config['sleep_time'])
 
     @classmethod
-    def process_xml_by_address(cls, numerero_map, prov_name, city_name, tv, nv, pictures=False):
+    def process_xml_by_address(cls, numerero_map, prov_name, city_name, tv, nv, num, pictures=False):
         results = []
         if numerero_map.consulta_numerero.lerr.err.cod != DotMap():
             return results
@@ -161,7 +162,6 @@ class ScrapperXML(Scrapper):
             cadaster_num = nump.pc.pc1 + nump.pc.pc2
 
             coords_map = cls.get_coords_from_cadaster(prov_name, city_name, cadaster_num)
-
             lon = coords_map.consulta_coordenadas.coordenadas.coord.geo.xcen
             if lon == DotMap():
                 lon = None
@@ -197,18 +197,29 @@ class ScrapperXML(Scrapper):
                     if site_map.rc == DotMap():
                         continue
 
-                    cadaster = site_map.rc.pc1 + site_map.rc.pc2 + site_map.rc.car + site_map.rc.cc1 + site_map.rc.cc2
-                    sub_entry = cls.get_cadaster_entries_by_cadaster(prov_name, city_name, cadaster)
+                    # Multiparcela
+                    parcelas = entry_map.consulta_dnp.lrcdnp.rcdnp
+                    if not isinstance(parcelas, list):
+                        parcelas = [parcelas]
+                    for parcela in parcelas:
+                        cadaster = parcela.rc.pc1 if parcela.rc.pc1 != DotMap() else ''
+                        cadaster += parcela.rc.pc2 if parcela.rc.pc2 != DotMap() else ''
+                        cadaster += parcela.rc.car if parcela.rc.car != DotMap() else ''
+                        cadaster += parcela.rc.cc1 if parcela.rc.cc1 != DotMap() else ''
+                        cadaster += parcela.rc.cc2 if parcela.rc.cc2 != DotMap() else ''
 
-                    prov_num = entry_map.consulta_dnp.lrcdnp.rcdnp.loine.cp
-                    city_num = entry_map.consulta_dnp.lrcdnp.rcdnp.loine.cm
+                        if pictures:
+                            prov_num = parcela.dt.loine.cp
+                            city_num = parcela.dt.cmc
+                            if prov_num != DotMap() and city_num != DotMap():
+                                picture = cls.scrap_site_picture(prov_num, city_num, cadaster)
 
-                    if pictures and prov_num != DotMap() and city_num != DotMap():
-                        picture = cls.scrap_site_picture(prov_num, city_num, cadaster)
+                        parcela = cls.get_cadaster_entries_by_cadaster('', '', cadaster)
+                        cadaster_entry = CadasterEntryXML(parcela, lon, lat, picture)
+                        cadaster_entry.to_elasticsearch()
 
-                    cadaster_entry = CadasterEntryXML(sub_entry, lon, lat, picture)
-                    results.append(cadaster_entry)
-                    cadaster_entry.to_elasticsearch()
-                    sleep(config['sleep_time'])
+                        results.append(cadaster_entry)
+
+                        sleep(config['sleep_time'])
 
         return results
