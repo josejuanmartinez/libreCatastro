@@ -5,13 +5,13 @@ from time import sleep
 from urllib.request import urlopen
 from xml.etree import ElementTree
 from bs4 import BeautifulSoup
+from dotmap import DotMap
 
 from src.librecatastro.domain.cadaster_entry.cadaster_entry_html import CadasterEntryHTML
 from src.librecatastro.scrapping.scrapper import Scrapper
 from src.settings import config
 
 from src.utils.cadastro_logger import CadastroLogger
-
 
 '''Logger'''
 logger = CadastroLogger(__name__).logger
@@ -30,15 +30,17 @@ class ScrapperHTML(Scrapper):
     URL_REF_FULL = "https://www1.sedecatastro.gob.es/CYCBienInmueble/OVCConCiud.aspx?RefC={}&RCCompleta={}&del={}&mun={}"
 
     '''Information to scrap from HTML'''
-    description_field_names = [u'Referencia catastral', u'Localización', u'Clase', u'Uso principal', u'Superficie construida', u'Año construcción']
+    description_field_names = [u'Referencia catastral', u'Localización', u'Clase', u'Uso principal',
+                               u'Superficie construida', u'Año construcción']
     gsurface_field_names = [u'Superficie gráfica']
 
     """ Scrapping calls """
+
     @classmethod
     def scrap_coord(cls, x, y, pictures=False):
         logger.debug("====Longitude: {} Latitude: {}====".format(x, y))
         url = cls.URL.format(x, y)
-        logger.debug("[|||        ] URL for coordinates: {}".format(url))
+        logger.debug("URL for coordinates: {}".format(url))
         f = urlopen(url)
         data = f.read()
         root = ElementTree.fromstring(data)
@@ -46,99 +48,98 @@ class ScrapperHTML(Scrapper):
             "{http://www.catastro.meh.es/}coordenadas//{http://www.catastro.meh.es/}coord//{http://www.catastro.meh.es/}pc//{http://www.catastro.meh.es/}pc1")
         pc2 = root.find(
             "{http://www.catastro.meh.es/}coordenadas//{http://www.catastro.meh.es/}coord//{http://www.catastro.meh.es/}pc//{http://www.catastro.meh.es/}pc2")
-        if pc1 is None or pc2 is None:
-            return []
-        else:
-            logger.debug("|||||       ] FOUND!")
+
+        results = []
+        if pc1 is not None and pc2 is not None:
             cadaster = ''.join([pc1.text, pc2.text])
             cadaster_entries = cls.scrap_cadaster(cadaster, None, None, x, y, pictures)
             for cadaster_entry in cadaster_entries:
                 cadaster_entry.to_elasticsearch()
-            return cadaster_entries
+                results.append(cadaster_entry)
+
+        return results
 
     @classmethod
     def scrap_provinces(cls, prov_list, pictures=False):
-        """Scraps properties by addresses"""
-        provinces = cls.get_provinces()['consulta_provinciero']['provinciero']['prov']
 
-        for province in provinces:
-            prov_name = province['np']
-            prov_num = province['cpine']
+        for prov_name, prov_num, city_name, city_num, address, tv, nv in cls.get_address_iter(prov_list):
 
-            if len(prov_list) > 0 and prov_name not in prov_list:
+            if tv == DotMap() or nv == DotMap():
                 continue
 
-            cities = cls.get_cities(prov_name)['consulta_municipiero']['municipiero']['muni']
-            for city in cities:
-                city_name = city['nm']
-                city_num = city['locat']['cmc']
-                addresses = (cls.get_addresses(prov_name, city_name)['consulta_callejero']['callejero'][
-                    'calle'])
+            num_scrapping_fails = 10
+            counter = 1
+            while num_scrapping_fails > 0:
+                try:
+                    numerero_map = cls.get_cadaster_by_address(prov_name, city_name, tv, nv, counter)
+                    if numerero_map.consulta_numerero.lerr.err.cod != DotMap():
+                        num_scrapping_fails -= 1
+                    else:
 
-                for address in addresses:
-                    address_dir = address['dir']
-                    tv = address_dir['tv']
-                    nv = address_dir['nv']
+                        numps = numerero_map.consulta_numerero.numerero.nump
 
-                    num_scrapping_fails = 10
-                    counter = 1
-                    while num_scrapping_fails > 0:
-                        try:
-                            cadaster = cls.get_cadaster_by_address(prov_name, city_name, tv, nv, counter)
-                            if 'lerr' in cadaster['consulta_numerero'] and \
-                                    'err' in cadaster['consulta_numerero']['lerr'] and \
-                                    'cod' in cadaster['consulta_numerero']['lerr']['err'] and \
-                                    cadaster['consulta_numerero']['lerr']['err']['cod'] == '43':
-                                num_scrapping_fails -= 1
-                            else:
-                                logger.debug("|||||       ] FOUND!")
-                                numps = cadaster['consulta_numerero']['numerero']['nump']
+                        if not isinstance(numps, list):
+                            numps = [numps]
 
-                                if not isinstance(numps, list):
-                                    numps = [numps]
+                        for nump in numps:
+                            if nump.num.pnp == DotMap():
+                                continue
 
-                                for nump in numps:
-                                    num = nump['num']['pnp']
-                                    cadaster_num = nump['pc']['pc1'] + nump['pc']['pc2']
+                            num = nump.num.pnp
 
-                                    coords = cls.get_coords_from_cadaster(prov_name, city_name,cadaster_num)
-                                    lon = coords['consulta_coordenadas']['coordenadas']['coord']['geo']['xcen']
-                                    lat = coords['consulta_coordenadas']['coordenadas']['coord']['geo']['ycen']
+                            if nump.pc == DotMap():
+                                continue
 
-                                    ''' Adding to tracking file'''
-                                    logger.info('{},{}'.format(lon, lat))
+                            if nump.pc.pc1 == DotMap() or nump.pc.pc2 == DotMap():
+                                continue
 
-                                    num_scrapping_fails = 10
+                            cadaster_num = nump.pc.pc1 + nump.pc.pc2
 
-                                    cadaster_list = cls.scrap_cadaster(cadaster_num, prov_num, city_num, lon, lat, pictures)
+                            coords_map = cls.get_coords_from_cadaster(prov_name, city_name, cadaster_num)
 
-                                    for cadaster in cadaster_list:
-                                        cadaster.to_elasticsearch()
+                            lon = coords_map.consulta_coordenadas.coordenadas.coord.geo.xcen
+                            if lon == DotMap():
+                                lon = None
 
-                                counter += 1
-                                sleep(config['sleep_time'])
+                            lat = coords_map.consulta_coordenadas.coordenadas.coord.geo.ycen
+                            if lat == DotMap():
+                                lat = None
 
-                        except urllib.error.HTTPError as e:
-                            logger.error(
-                                "ERROR AT ADDRESS {} {} {} {} {}".format(tv, nv, num, prov_name, city_name))
-                            logger.error("=============================================")
-                            logger.error(e, exc_info=True)
-                            logger.error("...sleeping...")
-                            logger.error("=============================================")
-                            ''' Could be a service Unavailable or denegation of service'''
-                            num_scrapping_fails -= 1
-                            sleep(config['sleep_dos_time'])
+                            ''' Adding to tracking file'''
+                            logger.info('{},{}'.format(lon, lat))
 
-                        except Exception as e:
-                            logger.error(
-                                "ERROR AT ADDRESS {} {} {} {} {}".format(tv, nv, num, prov_name, city_name))
-                            logger.error("=============================================")
-                            logger.error(e, exc_info=True)
-                            logger.error("=============================================")
-                            num_scrapping_fails -= 1
+                            num_scrapping_fails = 10
+
+                            cadaster_list = cls.scrap_cadaster(cadaster_num, prov_num, city_num, lon, lat, pictures)
+
+                            for cadaster in cadaster_list:
+                                cadaster.to_elasticsearch()
 
                         counter += 1
                         sleep(config['sleep_time'])
+
+                except urllib.error.HTTPError as e:
+                    logger.error(
+                        "ERROR AT ADDRESS {} {} {} {} {}".format(tv, nv, num, prov_name, city_name))
+                    logger.error("=============================================")
+                    logger.error(e, exc_info=True)
+                    logger.error("...sleeping...")
+                    logger.error("=============================================")
+                    ''' Could be a service Unavailable or denegation of service'''
+                    num_scrapping_fails -= 1
+                    sleep(config['sleep_dos_time'])
+
+                except Exception as e:
+                    logger.error(
+                        "ERROR AT ADDRESS {} {} {} {} {}".format(tv, nv, num, prov_name, city_name))
+                    logger.error("=============================================")
+                    logger.error(e, exc_info=True)
+                    logger.error("=============================================")
+                    num_scrapping_fails -= 1
+
+                counter += 1
+                sleep(config['sleep_time'])
+
 
     @classmethod
     def scrap_cadaster_full_code(cls, full_cadaster, delimitacion, municipio, x=None, y=None, picture=None):
@@ -150,13 +151,14 @@ class ScrapperHTML(Scrapper):
         parsed_html = BeautifulSoup(html, features="html.parser")
         return ScrapperHTML.parse_html_parcela(parsed_html, x, y, picture)
 
+
     @classmethod
     def scrap_cadaster(cls, cadaster, delimitacion=None, municipio=None, x=None, y=None, pictures=False):
         rc_1 = cadaster[0:7]
         rc_2 = cadaster[7:14]
         url_ref = cls.URL_REF.format(rc_1, rc_2)
 
-        logger.debug("[||||||||   ] URL for cadastral data: {}".format(url_ref))
+        logger.debug("URL for cadastral data: {}".format(url_ref))
 
         f_ref = urlopen(url_ref)
         data_ref = f_ref.read()
@@ -191,7 +193,8 @@ class ScrapperHTML(Scrapper):
                 partial_cadaster_ref = partial_cadaster.find("b")
                 logger.debug("-->Partial cadaster: {}".format(partial_cadaster_ref.text))
                 partial_cadaster_text = partial_cadaster_ref.text.strip()
-                cadaster = ScrapperHTML.scrap_cadaster_full_code(partial_cadaster_text, delimitacion, municipio, x, y, picture)
+                cadaster = ScrapperHTML.scrap_cadaster_full_code(partial_cadaster_text, delimitacion, municipio, x, y,
+                                                                 picture)
                 cadasters.append(cadaster)
                 sleep(config['sleep_time'])
 
@@ -200,12 +203,10 @@ class ScrapperHTML(Scrapper):
 
             cadasters.append(cadaster)
 
-        logger.debug("[|||||||||||] SUCCESS!")
         sleep(config['sleep_time'])
         return cadasters
 
     """ Parsing """
-
     @classmethod
     def parse_html_parcela(cls, parsed_html, x=None, y=None, picture=None):
         description = parsed_html.find(id='ctl00_Contenido_tblInmueble')
@@ -229,7 +230,7 @@ class ScrapperHTML(Scrapper):
                         descriptive_data[field_name] = descriptive_data[field_name].split(' ')[0]
                         descriptive_data[field_name] = descriptive_data[field_name].split('\xa0')[0]
                     elif field_header.text == u'Localización':
-                        descriptive_data[field_name] = field_value.encode_contents().decode('utf-8').replace('<br/>', config['separator']).replace('<br>', config['separator'])
+                        descriptive_data[field_name] = field_value.encode_contents().decode('utf-8').replace('<br/>',config['separator']).replace('<br>', config['separator'])
 
         '''Graphical Surface'''
         fields = parsed_html.find(id='ctl00_Contenido_tblFinca').find_all('div')
@@ -253,7 +254,9 @@ class ScrapperHTML(Scrapper):
                 continue
             columns = construction.find_all('span')
 
-            descriptive_data[u'Construcciones'].append(dict(uso=columns[0].text, escalera=columns[1].text, planta=columns[2].text, puerta=columns[3].text, superficie=columns[4].text, tipo=columns[5].text, fecha=columns[6].text))
+            descriptive_data[u'Construcciones'].append(
+                dict(uso=columns[0].text, escalera=columns[1].text, planta=columns[2].text, puerta=columns[3].text,
+                     superficie=columns[4].text, tipo=columns[5].text, fecha=columns[6].text))
 
         cadaster_entry = CadasterEntryHTML(descriptive_data)
         return cadaster_entry

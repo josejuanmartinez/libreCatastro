@@ -26,9 +26,10 @@ class CadasterEntry:
         self.constructions = cadaster_entry.constructions
         self.picture = cadaster_entry.picture
         self.timestamp = cadaster_entry.timestamp
+        logger.debug(self.to_json_recursive())
 
     def to_json(self):
-        return dict(address=self.address, cadaster=self.cadaster, type=self.type, use=self.use, surface=self.surface, year=self.year, location=self.location, gsurface=self.gsurface, constructions=self.constructions, picture=str(self.picture), timestamp=self.timestamp)
+        return dict(address=self.address, cadaster=self.cadaster, type=self.type, use=self.use, surface=self.surface, year=self.year, location=self.location, gsurface=self.gsurface, constructions=self.constructions, picture=str(self.picture) if self.picture is not None else None, timestamp=self.timestamp)
 
     def to_json_recursive(self):
         return json.dumps(self.to_json(), cls=JSONEncoder, sort_keys=True,
@@ -43,8 +44,9 @@ class CadasterEntry:
             res = es.index(index=config['elasticsearch-index'], doc_type='cadaster_doc', id=self.cadaster, body=body)
         except Exception as e:
             logger.error(e)
-        finally:
-            es.transport.close()
+
+        es.transport.close()
+
         return res
 
     def from_elasticsearch(self):
@@ -55,7 +57,7 @@ class CadasterEntry:
             res = es.search(index=config['elasticsearch-index'], body=query)
         except Exception as e:
             logger.error(e)
-        finally:
-            es.transport.close()
+
+        es.transport.close()
 
         return res

@@ -4,6 +4,7 @@ from urllib.request import urlopen
 
 import requests
 import xmltodict
+from dotmap import DotMap
 
 from src.settings import config
 from src.utils.cadastro_logger import CadastroLogger
@@ -36,7 +37,7 @@ class Scrapper:
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaProvincia")
         response = requests.get(url)
         xml = response.content
-        return xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)
+        return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
     def get_cities(cls, provincia, municipio=None):
@@ -48,7 +49,7 @@ class Scrapper:
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaMunicipio")
         response = requests.get(url, params=params)
         xml = response.content
-        return xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)
+        return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
     def get_addresses(cls, provincia, municipio, tipovia=None, nombrevia=None):
@@ -66,7 +67,56 @@ class Scrapper:
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaVia")
         response = requests.get(url, params=params)
         xml = response.content
-        return xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)
+        return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
+
+    @classmethod
+    def get_address_iter(cls, prov_list=None):
+        """Scraps properties by addresses"""
+
+        if prov_list is None:
+            prov_list = []
+
+        provinces = cls.get_provinces().consulta_provinciero.provinciero.prov
+        if provinces == DotMap():
+            logger.error("No provinces available right now (Service is down?)")
+            yield None
+
+        for province in provinces:
+            prov_name = province.np
+            prov_num = province.cpine
+            if prov_name == DotMap() or prov_num == DotMap():
+                continue
+
+            if len(prov_list) > 0 and prov_name not in prov_list:
+                continue
+
+            cities = cls.get_cities(prov_name).consulta_municipiero.municipiero.muni
+            if cities == DotMap():
+                logger.error("No cities available right now (Service is down?)")
+                return
+
+            for city in cities:
+                city_name = city.nm
+                city_num = city.locat.cmc
+
+                if city_name == DotMap() or city_num == DotMap():
+                    continue
+
+                addresses = cls.get_addresses(prov_name, city_name).consulta_callejero.callejero.calle
+                if addresses == DotMap():
+                    logger.error("No addresses available right now (Service is down?)")
+                    return
+
+                for address in addresses:
+
+                    address_dir = address.dir
+                    tv = address_dir.tv
+                    nv = address_dir.nv
+
+                    if tv == DotMap() or nv == DotMap():
+                        continue
+                    else:
+                        yield (prov_name, prov_num, city_name, city_num, address_dir, tv, nv)
 
     @classmethod
     def get_cadaster_by_address(cls, provincia, municipio, tipovia, nombrevia, numero):
@@ -79,11 +129,11 @@ class Scrapper:
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaNumero")
 
         logger.debug("====Dir: {} {} {} {} {}====".format(tipovia, nombrevia, numero, municipio, provincia))
-        logger.debug("[|||        ] URL for address: {}".format(url + '?' + urllib.parse.urlencode(params)))
+        logger.debug("URL for address: {}".format(url + '?' + urllib.parse.urlencode(params)))
 
         response = requests.get(url, params=params)
         xml = response.content
-        return xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)
+        return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
     def get_cadaster_entries_by_address(cls, provincia, municipio, sigla, calle, numero, bloque=None, escalera=None,
@@ -111,11 +161,11 @@ class Scrapper:
             params['Puerta'] = ''
 
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/Consulta_DNPLOC")
-        logger.debug("[|||||||||| ] URL for entry: {}".format(url + '?' + urllib.parse.urlencode(params)))
+        logger.debug("URL for entry: {}".format(url + '?' + urllib.parse.urlencode(params)))
 
         response = requests.get(url, params=params)
         xml = response.content
-        return xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)
+        return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
     def get_cadaster_entries_by_cadaster(cls, provincia, municipio, rc):
@@ -125,27 +175,28 @@ class Scrapper:
                   "RC": rc}
 
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/Consulta_DNPRC")
-        logger.debug("[|||||||||| ] URL for entry: {}".format(url + '?' + urllib.parse.urlencode(params)))
+        logger.debug("URL for entry: {}".format(url + '?' + urllib.parse.urlencode(params)))
         response = requests.get(url, params=params)
         xml = response.content
-        return xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)
+        return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
     def get_coords_from_cadaster(cls, provincia, municipio, cadaster):
         params = {'Provincia': provincia, 'Municipio': municipio, 'SRS': 'EPSG:4230', 'RC': cadaster}
         url = cls.URL_LOCATIONS_BASE.format("/OVCCoordenadas.asmx/Consulta_CPMRC")
 
-        logger.debug("[||||||||   ] URL for coords: {}".format(url + '?' + urllib.parse.urlencode(params)))
+        logger.debug("URL for coords: {}".format(url + '?' + urllib.parse.urlencode(params)))
 
         response = requests.get(url, params=params)
         xml = response.content
-        return xmltodict.parse(xml, process_namespaces=False, xml_attribs=False)
+        return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
-    def scrap_site_picture(cls, prov_name, city_name, cadaster):
-        url_pic = cls.URL_PICTURES.format(prov_name, city_name, cadaster, config['width_px'], config['height_px'])
+    def scrap_site_picture(cls, prov_num, city_num, cadaster):
 
-        logger.debug("[||||||||   ] URL for picture data: {}".format(url_pic))
+        url_pic = cls.URL_PICTURES.format(prov_num, city_num, cadaster, config['width_px'], config['height_px'])
+
+        logger.debug("URL for picture data: {}".format(url_pic))
 
         f_pic = urlopen(url_pic)
 

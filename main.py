@@ -34,5 +34,4 @@ if __name__ == "__main__":
     if args.coords:
         CoordinatesInput.scrap_coordinates(scrapper, filenames, pictures)
     else:
-        print(pictures)
         ProvincesInput.scrap_provinces(scrapper, provinces, pictures)

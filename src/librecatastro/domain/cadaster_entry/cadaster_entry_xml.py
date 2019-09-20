@@ -1,6 +1,8 @@
 import json
 from datetime import datetime
 
+from dotmap import DotMap
+
 from src.librecatastro.domain.address import Address
 from src.librecatastro.domain.cadaster_entry.cadaster_entry import CadasterEntry
 from src.librecatastro.domain.construction import Construction
@@ -14,33 +16,48 @@ logger = CadastroLogger(__name__).logger
 class CadasterEntryXML(CadasterEntry):
     """Cadaster class, that stores all the information about a surface and its properties"""
 
-    def __init__(self, xml, lon, lat):
+    def __init__(self,  xml, lon=None, lat=None, picture=None):
+        self.address = None
+        if xml.consulta_dnp.bico.bi.ldt != DotMap():
+            self.address = Address(xml.consulta_dnp.bico.bi.ldt)
 
-        self.address = Address(xml['consulta_dnp']['bico']['bi']['ldt'])
+        self.cadaster  = xml.consulta_dnp.bico.bi.idbi.rc.pc1 if xml.consulta_dnp.bico.bi.idbi.rc.pc1 != DotMap() else ''
+        self.cadaster += xml.consulta_dnp.bico.bi.idbi.rc.pc2 if xml.consulta_dnp.bico.bi.idbi.rc.pc2 != DotMap() else ''
+        self.cadaster += xml.consulta_dnp.bico.bi.idbi.rc.car if xml.consulta_dnp.bico.bi.idbi.rc.car != DotMap() else ''
+        self.cadaster += xml.consulta_dnp.bico.bi.idbi.rc.cc1 if xml.consulta_dnp.bico.bi.idbi.rc.cc1 != DotMap() else ''
+        self.cadaster += xml.consulta_dnp.bico.bi.idbi.rc.cc2 if xml.consulta_dnp.bico.bi.idbi.rc.cc2 != DotMap() else ''
 
-        self.cadaster = xml['consulta_dnp']['bico']['bi']['idbi']['rc']['pc1'] + \
-                        xml['consulta_dnp']['bico']['bi']['idbi']['rc']['pc2'] + \
-                        xml['consulta_dnp']['bico']['bi']['idbi']['rc']['car'] + \
-                        xml['consulta_dnp']['bico']['bi']['idbi']['rc']['cc1'] + \
-                        xml['consulta_dnp']['bico']['bi']['idbi']['rc']['cc2']
+        self.year = None
+        if xml.consulta_dnp.bico.bi.debi is not None:
+            self.year = xml.consulta_dnp.bico.bi.debi.ant
+            if self.year == DotMap():
+                self.year = None
 
-        self.year = xml['consulta_dnp']['bico']['bi']['debi']['ant'] \
-            if 'debi' in xml['consulta_dnp']['bico']['bi'] and\
-               'ant' in xml['consulta_dnp']['bico']['bi']['debi'] else None
+        self.type = xml.consulta_dnp.bico.bi.idbi.cn
+        if self.type != DotMap() and self.type == 'UR':
+            self.type = u'Urbano'
+        else:
+            self.type = u'Rústico'
 
-        self.type = xml['consulta_dnp']['bico']['bi']['idbi']['cn'] if 'cn' in xml['consulta_dnp']['bico']['bi']['idbi'] else None
-        if self.type is not None:
-            self.type = u'Urbano' if self.type == 'UR' else u'Rústico'
+        self.use = None
+        if xml.consulta_dnp.bico.bi.debi is not None:
+            self.use = xml.consulta_dnp.bico.bi.debi.luso
+            if self.use == DotMap():
+                self.use = None
 
-        self.use = xml['consulta_dnp']['bico']['bi']['debi']['luso'] if 'luso' in xml['consulta_dnp']['bico']['bi']['debi'] else None
-        self.surface = xml['consulta_dnp']['bico']['bi']['debi']['sfc'] + 'm2' if 'sfc' in xml['consulta_dnp']['bico']['bi']['debi'] else None
+        self.surface = None
+        if xml.consulta_dnp.bico.bi.debi is not None:
+            self.surface = xml.consulta_dnp.bico.bi.debi.sfc + 'm2'
+            if self.surface == DotMap():
+                self.surface = None
+
         self.location = Location(lon, lat)
         self.gsurface = config['not_available_via_XML']
         self.constructions = []
 
         constructions = []
-        if 'lcons' in xml['consulta_dnp']['bico']:
-            constructions = xml['consulta_dnp']['bico']['lcons']['cons']
+        if xml.consulta_dnp.bico.lcons.cons != DotMap():
+            constructions = xml.consulta_dnp.bico.lcons.cons
 
         ''' Bad XML design, instead of returning a list with 1 element, it returns
         the element'''
@@ -48,11 +65,26 @@ class CadasterEntryXML(CadasterEntry):
             constructions = [constructions]
 
         for construction in constructions:
-            use = construction['lcd'] if 'lcd' in construction else None
-            doorway = construction['dt']['lourb']['loint']['es'] if 'dt' in construction else None
-            floor = construction['dt']['lourb']['loint']['pt'] if 'dt' in construction else None
-            door = construction['dt']['lourb']['loint']['pu'] if 'dt' in construction else None
-            surface = construction['dfcons']['stl'] if 'dfcons' in construction and 'stl' in construction['dfcons'] else None
+            use = construction.lcd
+            if use == DotMap():
+                use = None
+
+            doorway = construction.dt.lourb.loint.es
+            if doorway == DotMap():
+                doorway = None
+
+            floor = construction.dt.lourb.loint.pt
+            if floor == DotMap():
+                floor = None
+
+            door = construction.dt.lourb.loint.pu
+            if door == DotMap():
+                door = None
+
+            surface = construction.dfcons.stl
+            if surface == DotMap():
+                surface = None
+
             reform_type = config['not_available_via_XML']
             reform_date = config['not_available_via_XML']
 
@@ -60,5 +92,6 @@ class CadasterEntryXML(CadasterEntry):
                 dict(uso=use, escalera=doorway, planta=floor, puerta=door, superficie=surface, tipo=reform_type,
                      fecha=reform_date)))
 
+        self.picture = picture
         self.timestamp = str(datetime.now())
         super().__init__(self)
