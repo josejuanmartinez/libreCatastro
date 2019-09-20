@@ -1,4 +1,5 @@
-import json
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from dotmap import DotMap
 
@@ -8,6 +9,7 @@ from src.utils.cadastro_logger import CadastroLogger
 
 '''Logger'''
 logger = CadastroLogger(__name__).logger
+
 
 class ProvincesSearch(Search):
     def __init__(self):

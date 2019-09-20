@@ -1,4 +1,6 @@
-import json
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from datetime import datetime
 
 from dotmap import DotMap

@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 class Reform:
     def __init__(self, reform_data):
         self.type = reform_data['tipo'].strip()

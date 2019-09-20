@@ -1,4 +1,5 @@
-import json
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from src.utils.cadastro_logger import CadastroLogger
 
