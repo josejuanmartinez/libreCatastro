@@ -70,7 +70,7 @@ class Scrapper:
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
-    def get_address_iter(cls, prov_list=None):
+    def get_address_iter(cls, prov_list=None, start_from=''):
         """Scraps properties by addresses"""
 
         if prov_list is None:
@@ -100,6 +100,10 @@ class Scrapper:
                 city_num = city.locat.cmc
 
                 if city_name == DotMap() or city_num == DotMap():
+                    continue
+
+                if start_from != '' and city_name != start_from:
+                    logger.debug("Skipping {}".format(city_name))
                     continue
 
                 addresses = cls.get_addresses(prov_name, city_name).consulta_callejero.callejero.calle
@@ -165,6 +169,7 @@ class Scrapper:
 
         response = requests.get(url, params=params)
         xml = response.content
+
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod

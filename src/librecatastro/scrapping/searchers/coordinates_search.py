@@ -5,7 +5,7 @@ import random
 from time import sleep
 
 from src.librecatastro.domain.geometry.geo_polygon import GeoPolygon
-from src.librecatastro.scrapping.input import Input
+from src.librecatastro.scrapping.search import Search
 from src.settings import config
 from src.utils.cadastro_logger import CadastroLogger
 from src.utils.list_utils import ListUtils
@@ -14,12 +14,12 @@ from src.utils.list_utils import ListUtils
 logger = CadastroLogger(__name__).logger
 
 
-class CoordinatesInput(Input):
+class CoordinatesSearch(Search):
     def __init__(self):
         super().__init__()
 
     @classmethod
-    def scrap_coordinates(cls, scrapper, filenames, pictures):
+    def scrap_coordinates(cls, scrapper, filenames, pictures=False):
         for r, d, files in os.walk(config['coordinates_path']):
             for file in files:
 
@@ -31,12 +31,12 @@ class CoordinatesInput(Input):
 
                 try:
                     polygon = GeoPolygon(os.path.join(config['coordinates_path'], file))
-                    CoordinatesInput.scrap_polygon(scrapper, polygon, pictures)
+                    CoordinatesSearch.scrap_polygon(scrapper, polygon, pictures)
                 except:
                     logger.error("{} is not formatted properly. Please take a look at the examples.".format(file))
 
     @classmethod
-    def scrap_polygon(cls, scrapper, polygon, pictures):
+    def scrap_polygon(cls, scrapper, polygon, pictures=False):
         bb = polygon.get_bounding_box()
         lon_min = int(bb[0] * config['scale'])
         lon_max = int(bb[2] * config['scale'])

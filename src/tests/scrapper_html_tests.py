@@ -3,7 +3,7 @@ import unittest
 
 from src.librecatastro.domain.geometry.geo_polygon import GeoPolygon
 from src.librecatastro.scrapping.format.scrapper_html import ScrapperHTML
-from src.librecatastro.scrapping.source.coordinates_input import CoordinatesInput
+from src.librecatastro.scrapping.searchers.coordinates_search import CoordinatesSearch
 from src.settings import config
 from src.utils.elasticsearch_utils import ElasticSearchUtils
 
@@ -89,7 +89,7 @@ class ScrapperHTMLTests(unittest.TestCase):
     def scrap_random_until_x_times_found(self, times):
         polygon = GeoPolygon(os.path.join(config['coordinates_path'], 'spain_polygon.json'))
         coord = polygon.get_bounding_box()
-        cadaster_list = CoordinatesInput.scrap_results_random_x_times(times, int(coord[0]*config['scale']), int(coord[2]*config['scale']), int(coord[1]*config['scale']), int(coord[3]*config['scale']), ScrapperHTML)
+        cadaster_list = CoordinatesSearch.scrap_results_random_x_times(times, int(coord[0] * config['scale']), int(coord[2] * config['scale']), int(coord[1] * config['scale']), int(coord[3] * config['scale']), ScrapperHTML)
         self.assertTrue(len(cadaster_list) >= times)
         return cadaster_list
 

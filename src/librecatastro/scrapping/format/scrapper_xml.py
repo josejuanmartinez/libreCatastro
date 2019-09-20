@@ -93,8 +93,8 @@ class ScrapperXML(Scrapper):
         return results
 
     @classmethod
-    def scrap_provinces(cls, prov_list, pictures=False):
-        for prov_name, prov_num, city_name, city_num, address, tv, nv in cls.get_address_iter(prov_list):
+    def scrap_provinces(cls, prov_list, pictures=False, start_from=''):
+        for prov_name, prov_num, city_name, city_num, address, tv, nv in cls.get_address_iter(prov_list, start_from):
             if tv == DotMap() or nv == DotMap():
                 continue
 
@@ -103,7 +103,7 @@ class ScrapperXML(Scrapper):
             while num_scrapping_fails > 0:
                 try:
                     cadaster = cls.get_cadaster_by_address(prov_name, city_name, tv, nv, counter)
-                    res = cls.process_xml_by_address(cadaster, prov_name, city_name, tv, nv)
+                    res = cls.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, pictures)
                     if len(res) < 1:
                         num_scrapping_fails -= 1
                     else:
@@ -133,7 +133,7 @@ class ScrapperXML(Scrapper):
                 sleep(config['sleep_time'])
 
     @classmethod
-    def process_xml_by_address(cls, numerero_map, prov_name, city_name, tv, nv):
+    def process_xml_by_address(cls, numerero_map, prov_name, city_name, tv, nv, pictures=False):
         results = []
         if numerero_map.consulta_numerero.lerr.err.cod != DotMap():
             return results
@@ -177,8 +177,8 @@ class ScrapperXML(Scrapper):
                 prov_num = entry_map.consulta_dnp.bico.bi.dt.loine.cp
                 city_num = entry_map.consulta_dnp.bico.bi.dt.loine.cm
 
-                if prov_num != DotMap() and city_num != DotMap():
-                    picture = cls.scrap_site_picture(prov_num, city_num, cadaster_num)
+                if pictures and prov_num != DotMap() and city_num != DotMap():
+                        picture = cls.scrap_site_picture(prov_num, city_num, cadaster_num)
 
                 # Parcela
                 cadaster_entry = CadasterEntryXML(entry_map, lon, lat, picture)
@@ -200,7 +200,7 @@ class ScrapperXML(Scrapper):
                     prov_num = entry_map.consulta_dnp.lrcdnp.rcdnp.loine.cp
                     city_num = entry_map.consulta_dnp.lrcdnp.rcdnp.loine.cm
 
-                    if prov_num != DotMap() and city_num != DotMap():
+                    if pictures and prov_num != DotMap() and city_num != DotMap():
                         picture = cls.scrap_site_picture(prov_num, city_num, cadaster)
 
                     cadaster_entry = CadasterEntryXML(sub_entry, lon, lat, picture)

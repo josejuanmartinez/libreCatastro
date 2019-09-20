@@ -28,7 +28,7 @@ class Address:
         self.site = None
         self.lot = None
 
-        ''' NLP search '''
+        ''' NLP searchers '''
         self.first_line = self.get_first_line()
         self.second_line = self.get_second_line()
 

@@ -60,9 +60,9 @@ class ScrapperHTML(Scrapper):
         return results
 
     @classmethod
-    def scrap_provinces(cls, prov_list, pictures=False):
+    def scrap_provinces(cls, prov_list, pictures=False, start_from=''):
 
-        for prov_name, prov_num, city_name, city_num, address, tv, nv in cls.get_address_iter(prov_list):
+        for prov_name, prov_num, city_name, city_num, address, tv, nv in cls.get_address_iter(prov_list, start_from):
 
             if tv == DotMap() or nv == DotMap():
                 continue
@@ -150,7 +150,6 @@ class ScrapperHTML(Scrapper):
         html = str(data_ref.decode('utf-8'))
         parsed_html = BeautifulSoup(html, features="html.parser")
         return ScrapperHTML.parse_html_parcela(parsed_html, x, y, picture)
-
 
     @classmethod
     def scrap_cadaster(cls, cadaster, delimitacion=None, municipio=None, x=None, y=None, pictures=False):
