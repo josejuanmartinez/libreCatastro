@@ -137,6 +137,7 @@ class ParserHTML(Parser):
     """ Parsing """
     @classmethod
     def parse_html_parcela(cls, parsed_html, x=None, y=None, picture=None):
+        print(parsed_html)
         description = parsed_html.find(id='ctl00_Contenido_tblInmueble')
 
         descriptive_data = dict()

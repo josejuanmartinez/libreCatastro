@@ -88,12 +88,12 @@ class ScrapperHTML(Scrapper):
                 partial_cadaster_ref = partial_cadaster.find("b")
                 logger.debug("-->Partial cadaster: {}".format(partial_cadaster_ref.text))
                 partial_cadaster_text = partial_cadaster_ref.text.strip()
-                html = ScrapperHTML.scrap_cadaster_full_code(partial_cadaster_text, delimitacion, municipio)
-                htmls.append((html, picture))
+                parsed_html = ScrapperHTML.scrap_cadaster_full_code(partial_cadaster_text, delimitacion, municipio)
+                htmls.append((parsed_html, picture))
                 sleep(config['sleep_time'])
         else:
             # Parcela
-            htmls.append((html, picture))
+            htmls.append((parsed_html, picture))
 
         return htmls
 

@@ -4,7 +4,7 @@
 import sys
 import argparse
 
-from src.librecatastro.scrapping.parsers.parser_html import ScrapperHTML
+from src.librecatastro.scrapping.parsers.parser_html import ScrapperHTML, ParserHTML
 from src.librecatastro.scrapping.parsers.parser_xml import ParserXML
 from src.librecatastro.scrapping.searchers.coordinates_searcher import CoordinatesSearcher
 from src.librecatastro.scrapping.searchers.provinces_searcher import ProvincesSearcher
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     if args.scale:
         config['scale'] = args.scale
 
-    scrapper = ScrapperHTML if args.html else ParserXML
+    parser = ParserHTML if args.html else ParserXML
 
     filenames = args.filenames
     pictures = args.pictures
@@ -47,6 +47,6 @@ if __name__ == "__main__":
         exit(0)
 
     if args.coords:
-        CoordinatesSearcher.search_by_coordinates(scrapper, filenames, pictures)
+        CoordinatesSearcher.search_by_coordinates(parser, filenames, pictures)
     else:
-        ProvincesSearcher.search_by_provinces(scrapper, provinces, pictures, startcity)
+        ProvincesSearcher.search_by_provinces(parser, provinces, pictures, startcity)
