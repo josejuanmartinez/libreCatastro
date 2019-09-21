@@ -35,7 +35,7 @@ class ElasticSearchUtils:
                                 "doorway": {"type": "keyword"},
                                 "floor": {"type": "keyword"},
                                 "reform": {
-                                    "type": {"type": "nested"},
+                                    "type": "nested",
                                     "properties":
                                         {
                                             "type": {"type": "keyword"},
