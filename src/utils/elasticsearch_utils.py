@@ -26,6 +26,25 @@ class ElasticSearchUtils:
                     "properties": {
                         "location": {
                             "type": "geo_point"
+                        },
+                        "constructions": {
+                            "type": "nested",
+                            "properties":
+                            {
+                                "door": "keyword",
+                                "doorway": "keyword",
+                                "floor": "keyword",
+                                "reform": {
+                                    "type": "nested",
+                                    "properties":
+                                        {
+                                            "type": "keyword",
+                                            "year": "keyword"
+                                        }
+                                },
+                                "surface": "keyword",
+                                "use": "keyword"
+                            }
                         }
                     },
                     "dynamic_templates": [
