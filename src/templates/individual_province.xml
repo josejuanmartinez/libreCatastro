@@ -1,5 +1,0 @@
-<owl:NamedIndividual rdf:about="http://semantic-datahub.taiger.io/ontologies/Province/####PROVINCE####">
-    <rdf:type rdf:resource="http://semantic-datahub.taiger.io/ontologies/Province"/>
-    <rdfs:label>####PROVINCE####</rdfs:label>
-    <cadaster:mentioned_in rdf:resource="http://semantic-datahub.taiger.io/ontologies/Cadaster/####CADASTER####"/>
-</owl:NamedIndividual>

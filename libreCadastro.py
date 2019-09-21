@@ -4,10 +4,10 @@
 import sys
 import argparse
 
-from src.librecatastro.scrapping.format.scrapper_html import ScrapperHTML
-from src.librecatastro.scrapping.format.scrapper_xml import ScrapperXML
-from src.librecatastro.scrapping.searchers.coordinates_search import CoordinatesSearch
-from src.librecatastro.scrapping.searchers.provinces_search import ProvincesSearch
+from src.librecatastro.scrapping.parsers.parser_html import ScrapperHTML
+from src.librecatastro.scrapping.parsers.parser_xml import ParserXML
+from src.librecatastro.scrapping.searchers.coordinates_searcher import CoordinatesSearcher
+from src.librecatastro.scrapping.searchers.provinces_searcher import ProvincesSearcher
 from src.settings import config
 
 if __name__ == "__main__":
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     if args.scale:
         config['scale'] = args.scale
 
-    scrapper = ScrapperHTML if args.html else ScrapperXML
+    scrapper = ScrapperHTML if args.html else ParserXML
 
     filenames = args.filenames
     pictures = args.pictures
@@ -39,14 +39,14 @@ if __name__ == "__main__":
     startcity = args.startcity
 
     if args.listprovinces:
-        ProvincesSearch.list_provinces()
+        ProvincesSearcher.list_provinces()
         exit(0)
 
     if len(args.listcities) == 1:
-        ProvincesSearch.list_cities(args.listcities[0])
+        ProvincesSearcher.list_cities(args.listcities[0])
         exit(0)
 
     if args.coords:
-        CoordinatesSearch.scrap_coordinates(scrapper, filenames, pictures)
+        CoordinatesSearcher.search_by_coordinates(scrapper, filenames, pictures)
     else:
-        ProvincesSearch.scrap_provinces(scrapper, provinces, pictures, startcity)
+        ProvincesSearcher.search_by_provinces(scrapper, provinces, pictures, startcity)

@@ -6,7 +6,7 @@ logger = CadastroLogger(__name__).logger
 
 
 class ElasticSearchUtils:
-    """Custom class for managing Elastic Search queries"""
+    """Custom class for managing Elastic Searcher queries"""
 
     def __init__(self):
         pass

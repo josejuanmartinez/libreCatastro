@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import base64
-import urllib.parse
+from time import sleep
 from urllib.request import urlopen
+import urllib.parse
 
 import requests
 import xmltodict
@@ -17,22 +15,12 @@ logger = CadastroLogger(__name__).logger
 
 
 class Scrapper:
-    """Generic Scrapper class"""
-
-    '''Catastro web services parametrized'''
-    URL_LOCATIONS_BASE = "http://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC{}"
+    """Catastro web services parametrized"""
 
     URL_PICTURES = "https://www1.sedecatastro.gob.es/Cartografia/GeneraGraficoParcela.aspx?del={}&mun={}&refcat={}&AnchoPixels={}&AltoPixels={}"
+    URL_LOCATIONS_BASE = "http://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC{}"
 
     def __init__(self):
-        pass
-
-    @classmethod
-    def scrap_coords(cls, x, y, pictures=False):
-        pass
-
-    @classmethod
-    def scrap_provinces(cls, prov_list, pictures=False):
         pass
 
     @classmethod
@@ -40,6 +28,8 @@ class Scrapper:
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaProvincia")
         response = requests.get(url)
         xml = response.content
+
+        sleep(config['sleep_time'])
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
@@ -52,6 +42,8 @@ class Scrapper:
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaMunicipio")
         response = requests.get(url, params=params)
         xml = response.content
+
+        sleep(config['sleep_time'])
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
@@ -70,6 +62,8 @@ class Scrapper:
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaVia")
         response = requests.get(url, params=params)
         xml = response.content
+
+        sleep(config['sleep_time'])
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
@@ -126,6 +120,22 @@ class Scrapper:
                         yield (prov_name, prov_num, city_name, city_num, address_dir, tv, nv)
 
     @classmethod
+    def scrap_site_picture(cls, prov_num, city_num, cadaster):
+
+        url_pic = cls.URL_PICTURES.format(prov_num, city_num, cadaster, config['width_px'], config['height_px'])
+
+        logger.debug("URL for picture data: {}".format(url_pic))
+
+        f_pic = urlopen(url_pic)
+
+        data_ref = f_pic.read()
+
+        b64_image = base64.b64encode(data_ref).decode('utf-8')
+
+        sleep(config['sleep_time'])
+        return b64_image
+
+    @classmethod
     def get_cadaster_by_address(cls, provincia, municipio, tipovia, nombrevia, numero):
         params = {'Provincia': provincia,
                   'Municipio': municipio,
@@ -140,77 +150,20 @@ class Scrapper:
 
         response = requests.get(url, params=params)
         xml = response.content
-        return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
-    @classmethod
-    def get_cadaster_entries_by_address(cls, provincia, municipio, sigla, calle, numero, bloque=None, escalera=None,
-                                        planta=None,puerta=None):
-        params = {'Provincia': provincia,
-                  'Municipio': municipio,
-                  'Sigla': sigla,
-                  'Calle': calle,
-                  'Numero': str(numero)}
-        if bloque:
-            params['Bloque'] = str(bloque)
-        else:
-            params['Bloque'] = ''
-        if escalera:
-            params['Escalera'] = escalera
-        else:
-            params['Escalera'] = ''
-        if planta:
-            params['Planta'] = str(planta)
-        else:
-            params['Planta'] = ''
-        if puerta:
-            params['Puerta'] = str(puerta)
-        else:
-            params['Puerta'] = ''
-
-        url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/Consulta_DNPLOC")
-        logger.debug("URL for entry: {}".format(url + '?' + urllib.parse.urlencode(params)))
-
-        response = requests.get(url, params=params)
-        xml = response.content
-
-        return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
-
-    @classmethod
-    def get_cadaster_entries_by_cadaster(cls, provincia, municipio, rc):
-        """ provincia and municipio are optional and can be set to ''"""
-        params = {"Provincia": provincia,
-                  "Municipio": municipio,
-                  "RC": rc}
-
-        url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/Consulta_DNPRC")
-        logger.debug("URL for entry: {}".format(url + '?' + urllib.parse.urlencode(params)))
-        response = requests.get(url, params=params)
-        xml = response.content
+        sleep(config['sleep_time'])
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
     def get_coords_from_cadaster(cls, provincia, municipio, cadaster):
-        params = {'Provincia': provincia, 'Municipio': municipio, 'SRS': 'EPSG:4230', 'RC': cadaster}
+        params = {'Provincia': provincia, 'Municipio': municipio, 'SRS': 'EPSG:4326', 'RC': cadaster}
         url = cls.URL_LOCATIONS_BASE.format("/OVCCoordenadas.asmx/Consulta_CPMRC")
 
-        logger.debug("URL for coords: {}".format(url + '?' + urllib.parse.urlencode(params)))
+        logger.debug("URL for coordinates: {}".format(url + '?' + urllib.parse.urlencode(params)))
 
         response = requests.get(url, params=params)
         xml = response.content
+
+        sleep(config['sleep_time'])
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
-
-    @classmethod
-    def scrap_site_picture(cls, prov_num, city_num, cadaster):
-
-        url_pic = cls.URL_PICTURES.format(prov_num, city_num, cadaster, config['width_px'], config['height_px'])
-
-        logger.debug("URL for picture data: {}".format(url_pic))
-
-        f_pic = urlopen(url_pic)
-
-        data_ref = f_pic.read()
-
-        b64_image = base64.b64encode(data_ref).decode('utf-8')
-
-        return b64_image
 

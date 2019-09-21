@@ -1,4 +1,0 @@
-<owl:NamedIndividual rdf:about="http://semantic-datahub.taiger.io/ontologies/Cadaster/####CADASTER####">
-    <rdf:type rdf:resource="http://semantic-datahub.taiger.io/ontologies/Cadaster"/>
-    <rdfs:label>####CADASTER####</rdfs:label>
-</owl:NamedIndividual>

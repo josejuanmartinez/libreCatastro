@@ -16,5 +16,9 @@ config = {
     "sleep_time": 5,
     "sleep_dos_time": 300,
     "width_px": 120,
-    "height_px": 120
+    "height_px": 120,
+    "servers_down_message": "Some of the Cadastro servers are down. "
+                             "Maintenance is usually carried out durign the night or the weekends. Please, retry later."
+                             "As an alternative, your IP address may have been banned. Try to change your public IP"
+
 }

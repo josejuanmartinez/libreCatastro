@@ -11,7 +11,7 @@ logger = CadastroLogger(__name__).logger
 
 
 class Address:
-    """ Domain class for storing Address in Catastro format"""
+    """ Domain class for storing Address in Catastro parsers"""
     def __init__(self, address):
         self.full_address = address.strip()
 

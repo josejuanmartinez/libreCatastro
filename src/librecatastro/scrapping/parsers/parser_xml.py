@@ -4,14 +4,13 @@
 import urllib.parse
 from urllib import error
 
-from time import sleep
-
 import requests
 import xmltodict
 
 from src.librecatastro.domain.cadaster_entry.cadaster_entry_xml import CadasterEntryXML
+from src.librecatastro.scrapping.parser import Parser
 from src.librecatastro.scrapping.scrapper import Scrapper
-from src.settings import config
+from src.librecatastro.scrapping.scrappers.scrapper_xml import ScrapperXML
 from src.utils.cadastro_logger import CadastroLogger
 
 from dotmap import DotMap
@@ -20,28 +19,20 @@ from dotmap import DotMap
 logger = CadastroLogger(__name__).logger
 
 
-class ScrapperXML(Scrapper):
-    """Scrapper class for Catastro XML"""
+class ParserXML(Parser):
+    """Parser class for Catastro XML"""
 
     def __init__(self):
         super().__init__()
 
-    """ Scrapping main calls """
-
+    ''' Processing calls '''
     @classmethod
-    def scrap_coord(cls, x, y, pictures=False):
+    def process_search_by_coordinates(cls, x, y, pictures=False):
         """Scraps properties by coordinates"""
 
         results = []
 
-        params = {'SRS': 'EPSG:4230', 'Coordenada_X': x, 'Coordenada_Y': y}
-        url = cls.URL_LOCATIONS_BASE.format("/OVCCoordenadas.asmx/Consulta_RCCOOR")
-        response = requests.get(url, params=params)
-
-        logger.debug("====Longitude: {} Latitude: {}====".format(x, y))
-        logger.debug("URL for coordinates: {}".format(url + '?' + urllib.parse.urlencode(params)))
-
-        xml_dict_map = DotMap(xmltodict.parse(response.content, process_namespaces=False, xml_attribs=False))
+        xml_dict_map = ScrapperXML.get_coord(x, y)
         pc1 = None
         pc2 = None
         if xml_dict_map.consulta_coordenadas.coordenadas.coord.pc != DotMap():
@@ -55,7 +46,7 @@ class ScrapperXML(Scrapper):
 
         if pc1 is not None and pc2 is not None:
 
-            entry = cls.get_cadaster_entries_by_cadaster('', '', ''.join([pc1, pc2]))
+            entry = ScrapperXML.get_cadaster_entries_by_cadaster('', '', ''.join([pc1, pc2]))
             picture = None
             if entry.consulta_dnp.bico.bi.dt.loine != DotMap():
                 # Parcela
@@ -63,17 +54,20 @@ class ScrapperXML(Scrapper):
                     prov_num = entry.consulta_dnp.bico.bi.dt.loine.cp
                     city_num = entry.consulta_dnp.bico.bi.dt.cmc
                     if prov_num != DotMap() and city_num != DotMap():
-                        picture = cls.scrap_site_picture(prov_num, city_num, ''.join([pc1, pc2]))
-                cadaster_entry = CadasterEntryXML.create_from_bico(entry, x, y, picture)
+                        picture = Scrapper.scrap_site_picture(prov_num, city_num, ''.join([pc1, pc2]))
+                cadaster_entry = CadasterEntryXML(entry, x, y, picture)
                 cadaster_entry.to_elasticsearch()
-                sleep(config['sleep_time'])
                 results.append(cadaster_entry)
             elif entry.consulta_dnp.lrcdnp.rcdnp != DotMap():
                 # Multiparcela
                 parcelas = entry.consulta_dnp.lrcdnp.rcdnp
                 if not isinstance(parcelas, list):
                     parcelas = [parcelas]
+
                 for parcela in parcelas:
+
+                    prov_num = parcela.dt.loine.cp
+                    city_num = parcela.dt.cmc
 
                     cadaster = parcela.rc.pc1 if parcela.rc.pc1 != DotMap() else ''
                     cadaster += parcela.rc.pc2 if parcela.rc.pc2 != DotMap() else ''
@@ -81,24 +75,57 @@ class ScrapperXML(Scrapper):
                     cadaster += parcela.rc.cc1 if parcela.rc.cc1 != DotMap() else ''
                     cadaster += parcela.rc.cc2 if parcela.rc.cc2 != DotMap() else ''
 
-                    if pictures:
-                        prov_num = parcela.dt.loine.cp
-                        city_num = parcela.dt.cmc
-                        if prov_num != DotMap() and city_num != DotMap():
-                            picture = cls.scrap_site_picture(prov_num, city_num, cadaster)
+                    if pictures and prov_num != DotMap() and city_num != DotMap():
+                            picture = Scrapper.scrap_site_picture(prov_num, city_num, cadaster)
 
-                    parcela = cls.get_cadaster_entries_by_cadaster('', '', cadaster)
-                    cadaster_entry = CadasterEntryXML(parcela, x, y, picture)
+                    try:
+                        # Try to get info by complete cadaster num
+                        sub_entry = ScrapperXML.get_cadaster_entries_by_cadaster(prov_num, city_num, cadaster)
+                    except:
+                        # Cadastro did not return anything by cadaster entry (error? bug?)
+                        # Try to get it by complete address
+                        prov_name = parcela.dt.np
+                        if prov_name is DotMap():
+                            continue
+                        city_name = parcela.dt.np
+                        if city_name is DotMap():
+                            continue
+                        tv = parcela.ldt.locs.lous.lourb.dir.tv
+                        if tv is DotMap():
+                            tv = ''
+                        nv = parcela.ldt.locs.lous.lourb.dir.nv
+                        if nv is DotMap():
+                            nv = ''
+                        num = parcela.ldt.locs.lous.lourb.dir.pnp
+                        if num is DotMap():
+                            num = ''
+
+                        loint = parcela.dt.locs.lous.lourb.loint
+                        if loint is DotMap():
+                            continue
+                        bl = loint.bl
+                        if bl == DotMap():
+                            bl = ''
+                        es = loint.es
+                        if es == DotMap():
+                            es = ''
+                        pt = loint.pt
+                        if es == DotMap():
+                            pt = ''
+                        pu = loint.pu
+                        if es == DotMap():
+                            pu = ''
+                        sub_entry = ScrapperXML.get_cadaster_entries_by_address(prov_name, city_name, tv, nv, num, bl, es, pt, pu)
+
+                    cadaster_entry = CadasterEntryXML(sub_entry, x, y, picture)
                     cadaster_entry.to_elasticsearch()
 
                     results.append(cadaster_entry)
-
-                    sleep(config['sleep_time'])
         return results
 
     @classmethod
-    def scrap_provinces(cls, prov_list, pictures=False, start_from=''):
-        for prov_name, prov_num, city_name, city_num, address, tv, nv in cls.get_address_iter(prov_list, start_from):
+    def process_search_by_provinces(cls, prov_list, pictures=False, start_from=''):
+        for prov_name, prov_num, city_name, city_num, address, tv, nv in Scrapper.get_address_iter(prov_list, start_from):
             if tv == DotMap() or nv == DotMap():
                 continue
 
@@ -106,13 +133,12 @@ class ScrapperXML(Scrapper):
             counter = 1
             while num_scrapping_fails > 0:
                 try:
-                    cadaster = cls.get_cadaster_by_address(prov_name, city_name, tv, nv, counter)
+                    cadaster = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, counter)
                     res = cls.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, counter, pictures)
                     if len(res) < 1:
                         num_scrapping_fails -= 1
                     else:
                         num_scrapping_fails = 10
-                    sleep(config['sleep_time'])
 
                 except urllib.error.HTTPError as e:
                     logger.error(
@@ -123,7 +149,6 @@ class ScrapperXML(Scrapper):
                     logger.error("=============================================")
                     ''' Could be a service Unavailable or denegation of service'''
                     num_scrapping_fails -= 1
-                    sleep(config['sleep_dos_time'])
 
                 except Exception as e:
                     logger.error(
@@ -134,7 +159,8 @@ class ScrapperXML(Scrapper):
                     num_scrapping_fails -= 1
 
                 counter += 1
-                sleep(config['sleep_time'])
+
+    ''' Parsing calls '''
 
     @classmethod
     def process_xml_by_address(cls, numerero_map, prov_name, city_name, tv, nv, num, pictures=False):
@@ -161,7 +187,7 @@ class ScrapperXML(Scrapper):
 
             cadaster_num = nump.pc.pc1 + nump.pc.pc2
 
-            coords_map = cls.get_coords_from_cadaster(prov_name, city_name, cadaster_num)
+            coords_map = ScrapperXML.get_coords_from_cadaster(prov_name, city_name, cadaster_num)
             lon = coords_map.consulta_coordenadas.coordenadas.coord.geo.xcen
             if lon == DotMap():
                 lon = None
@@ -173,7 +199,7 @@ class ScrapperXML(Scrapper):
             ''' Adding to tracking file'''
             logger.info('{},{}'.format(lon, lat))
 
-            entry_map = cls.get_cadaster_entries_by_address(prov_name, city_name, tv, nv, num)
+            entry_map = ScrapperXML.get_cadaster_entries_by_address(prov_name, city_name, tv, nv, num)
             picture = None
             if entry_map.consulta_dnp.bico != DotMap():
 
@@ -181,14 +207,13 @@ class ScrapperXML(Scrapper):
                 city_num = entry_map.consulta_dnp.bico.bi.dt.loine.cm
 
                 if pictures and prov_num != DotMap() and city_num != DotMap():
-                        picture = cls.scrap_site_picture(prov_num, city_num, cadaster_num)
+                        picture = Scrapper.scrap_site_picture(prov_num, city_num, cadaster_num)
 
                 # Parcela
                 cadaster_entry = CadasterEntryXML(entry_map, lon, lat, picture)
                 results.append(cadaster_entry)
                 cadaster_entry.to_elasticsearch()
 
-                sleep(config['sleep_time'])
             elif entry_map.consulta_dnp.lrcdnp.rcdnp != DotMap():
                 # Multiparcela
                 for site in entry_map.consulta_dnp.lrcdnp.rcdnp:
@@ -208,18 +233,38 @@ class ScrapperXML(Scrapper):
                         cadaster += parcela.rc.cc1 if parcela.rc.cc1 != DotMap() else ''
                         cadaster += parcela.rc.cc2 if parcela.rc.cc2 != DotMap() else ''
 
-                        if pictures:
-                            prov_num = parcela.dt.loine.cp
-                            city_num = parcela.dt.cmc
-                            if prov_num != DotMap() and city_num != DotMap():
-                                picture = cls.scrap_site_picture(prov_num, city_num, cadaster)
+                        prov_num = parcela.dt.loine.cp
+                        city_num = parcela.dt.cmc
 
-                        parcela = cls.get_cadaster_entries_by_cadaster('', '', cadaster)
-                        cadaster_entry = CadasterEntryXML(parcela, lon, lat, picture)
+                        if pictures and prov_num != DotMap() and city_num != DotMap():
+                                picture = Scrapper.scrap_site_picture(prov_num, city_num, cadaster)
+
+                        try:
+                            # Try to get info by complete cadaster num
+                            sub_entry = ScrapperXML.get_cadaster_entries_by_cadaster(prov_num, city_num, cadaster)
+                        except:
+                            # Cadastro did not return anything by cadaster entry (error? bug?)
+                            # Try to get it by complete address
+                            loint = parcela.dt.locs.lous.lourb.loint
+                            if loint is DotMap():
+                                continue
+                            bl = loint.bl
+                            if bl == DotMap():
+                                bl = ''
+                            es = loint.es
+                            if es == DotMap():
+                                es = ''
+                            pt = loint.pt
+                            if es == DotMap():
+                                pt = ''
+                            pu = loint.pu
+                            if es == DotMap():
+                                pu = ''
+                            sub_entry = ScrapperXML.get_cadaster_entries_by_address(prov_name, city_name, tv, nv, num, bl, es, pt, pu)
+
+                        cadaster_entry = CadasterEntryXML(sub_entry, lon, lat, picture)
                         cadaster_entry.to_elasticsearch()
 
                         results.append(cadaster_entry)
-
-                        sleep(config['sleep_time'])
 
         return results

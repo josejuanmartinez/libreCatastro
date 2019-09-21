@@ -5,44 +5,48 @@ import unittest
 
 from time import sleep
 
-from dotmap import DotMap
-
 from src.librecatastro.domain.cadaster_entry.cadaster_entry_xml import CadasterEntryXML
-from src.librecatastro.scrapping.format.scrapper_xml import ScrapperXML
+from src.librecatastro.scrapping.parsers.parser_xml import ScrapperXML, ParserXML
+from src.librecatastro.scrapping.scrappers.scrapper_xml import ScrapperXML
 from src.settings import config
 
 
 class ScrapperXMLTests(unittest.TestCase):
     def test_scrapper_retrieves_dict_provinces(self):
-        self.assertEqual(ScrapperXML.get_provinces().consulta_provinciero.control.cuprov, '48')
-        sleep(config['sleep_time'])
+        try:
+            self.assertEqual(ScrapperXML.get_provinces().consulta_provinciero.control.cuprov, '48')
+        except:
+            self.assertFalse(config['servers_down_message'])
+            exit(-1)
 
     def test_scrapper_retrieves_dict_cities(self):
-        self.assertEqual(ScrapperXML.get_cities('ALACANT').consulta_municipiero.control.cumun, '141')
-        sleep(config['sleep_time'])
+        try:
+            self.assertEqual(ScrapperXML.get_cities('ALACANT').consulta_municipiero.control.cumun, '141')
+        except:
+            self.assertFalse(config['servers_down_message'])
+            exit(-1)
 
     def test_scrapper_retrieves_dict_addresses(self):
-        self.assertEqual(ScrapperXML.get_addresses('ALACANT','AGOST').consulta_callejero.control.cuca, '117')
-        sleep(config['sleep_time'])
+        try:
+            self.assertEqual(ScrapperXML.get_addresses('ALACANT', 'AGOST').consulta_callejero.control.cuca, '117')
+        except:
+            self.assertFalse(config['servers_down_message'])
+            exit(-1)
+
+    def test_get_cadaster_entries_by_cadaster_is_up(self):
+        cadasters = ['2503906VK4820D0001MX']
+        try:
+            for cadaster in cadasters:
+                ScrapperXML.get_cadaster_entries_by_cadaster('', '', cadaster)
+        except:
+            self.assertFalse(config['servers_down_message'])
+            exit(-1)
 
     def test_scrapper_retrieves_dict_addresses_iter(self):
         iterator = ScrapperXML.get_address_iter()
         address = iterator.__next__()
         self.assertEqual(address[1], '15')
         self.assertEqual(address[3], '7')
-        sleep(config['sleep_time'])
-
-    def test_scrapper_creates_cadaster_entry(self):
-        dotmap_res = ScrapperXML.get_cadaster_entries_by_cadaster('', '', '6375620YH0567S0001GW')
-        self.assertNotEqual(dotmap_res, DotMap())
-        sleep(config['sleep_time'])
-
-    def test_scrapper_creates_cadaster_entry_and_stores_in_elasticsearch(self):
-        entry = ScrapperXML.get_cadaster_entries_by_cadaster('', '', '6375620YH0567S0001GW')
-        cadaster_entry = CadasterEntryXML(entry)
-        cadaster_entry.to_elasticsearch()
-        self.assertIsNotNone(cadaster_entry.from_elasticsearch())
-        sleep(config['sleep_time'])
 
     def test_multiparcela_creates_n_entries_in_elasticsearch(self):
         prov_name = u'A CORUÑA'
@@ -127,7 +131,7 @@ class ScrapperXMLTests(unittest.TestCase):
     def test_multiparcela_coord_creates_n_entries(self):
         lon = -9.2503
         lat = 42.9723
-        self.assertEqual(len(ScrapperXML.scrap_coord(lon, lat, True)), 2)
+        self.assertEqual(len(ParserXML.process_search_by_coordinates(lon, lat, True)), 2)
 
     def test_multiparcela_address_creates_n_entries(self):
         prov_name = u'MADRID'
@@ -136,7 +140,7 @@ class ScrapperXMLTests(unittest.TestCase):
         nv = u'CANARIAS'
         num = 7
         cadaster = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
-        self.assertEqual(len(ScrapperXML.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 8)
+        self.assertEqual(len(ParserXML.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 8)
 
     def test_multiparcela_address_creates_n_entries_2(self):
         prov_name = u'MADRID'
@@ -145,7 +149,39 @@ class ScrapperXMLTests(unittest.TestCase):
         nv = u'CALVARIO'
         num = 38
         cadaster = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
-        self.assertEqual(len(ScrapperXML.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 8)
+        self.assertEqual(len(ParserXML.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 8)
+
+    def test_poligono_or_rural_creates_entry(self):
+        tv = 'CL'
+        nv = 'TORREJON'
+        num = 30
+        prov_name = 'MADRID'
+        city_name = 'AJALVIR'
+        cadaster = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
+        self.assertEqual(len(ParserXML.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 16)
+
+    def test_coordinates_are_in_good_format(self):
+        tv = 'CL'
+        nv = 'DE BENICARLO'
+        num = 1
+        prov_name = 'MADRID'
+        city_name = 'GALAPAGAR'
+        xml = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
+        cadaster_entry = ParserXML.process_xml_by_address(xml, prov_name, city_name, tv, nv, False)
+        self.assertEqual(cadaster_entry[0].location.lat, 40.6249762551374)
+        self.assertEqual(cadaster_entry[0].location.lon, -4.02755522611211)
+
+    def test_multiparcela_coordinates_are_in_good_format(self):
+        tv = 'CL'
+        nv = 'SAN VICENTE'
+        num = 26
+        prov_name = 'ALACANT'
+        city_name = 'ALICANTE/ALACANT'
+        xml = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
+        cadaster_entries = ParserXML.process_xml_by_address(xml, prov_name, city_name, tv, nv, False)
+        for cadaster_entry in cadaster_entries:
+            self.assertEqual(cadaster_entry.location.lat, 38.3495195831056)
+            self.assertEqual(cadaster_entry.location.lon, -0.484612452235845)
 
 
 if __name__ == '__main__':

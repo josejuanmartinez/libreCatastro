@@ -8,7 +8,7 @@ import random
 from time import sleep
 
 from src.librecatastro.domain.geometry.geo_polygon import GeoPolygon
-from src.librecatastro.scrapping.search import Search
+from src.librecatastro.scrapping.searcher import Searcher
 from src.settings import config
 from src.utils.cadastro_logger import CadastroLogger
 from src.utils.list_utils import ListUtils
@@ -17,12 +17,12 @@ from src.utils.list_utils import ListUtils
 logger = CadastroLogger(__name__).logger
 
 
-class CoordinatesSearch(Search):
+class CoordinatesSearcher(Searcher):
     def __init__(self):
         super().__init__()
 
     @classmethod
-    def scrap_coordinates(cls, scrapper, filenames, pictures=False):
+    def search_by_coordinates(cls, scrapper, filenames, pictures=False):
         for r, d, files in os.walk(config['coordinates_path']):
             for file in files:
 
@@ -34,12 +34,12 @@ class CoordinatesSearch(Search):
 
                 try:
                     polygon = GeoPolygon(os.path.join(config['coordinates_path'], file))
-                    CoordinatesSearch.scrap_polygon(scrapper, polygon, pictures)
+                    CoordinatesSearcher.search_in_polygon(scrapper, polygon, pictures)
                 except:
                     logger.error("{} is not formatted properly. Please take a look at the examples.".format(file))
 
     @classmethod
-    def scrap_polygon(cls, scrapper, polygon, pictures=False):
+    def search_in_polygon(cls, scrapper, polygon, pictures=False):
         bb = polygon.get_bounding_box()
         lon_min = int(bb[0] * config['scale'])
         lon_max = int(bb[2] * config['scale'])
@@ -57,7 +57,7 @@ class CoordinatesSearch(Search):
                 logger.info('{},{}'.format(x_scaled, y_scaled))
 
                 try:
-                    scrapper.scrap_coord(x_scaled, y_scaled, pictures)
+                    scrapper.process_search_by_coordinates(x_scaled, y_scaled, pictures)
 
                 except urllib.error.HTTPError as e:
                     logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
@@ -76,7 +76,7 @@ class CoordinatesSearch(Search):
                 sleep(config['sleep_time'])
 
     @staticmethod
-    def scrap_results_by_time(seconds, lon_min, lon_max, lat_min, lat_max, scrapper):
+    def search_by_coordinates_max_time(seconds, lon_min, lon_max, lat_min, lat_max, scrapper):
         start_time = time.time()
         results = []
 
@@ -88,7 +88,7 @@ class CoordinatesSearch(Search):
                 y_scaled = y / config['scale']
 
                 try:
-                    result = scrapper.scrap_coord(x_scaled, y_scaled)
+                    result = scrapper.process_search_by_coordinates(x_scaled, y_scaled)
 
                     if result is not None:
                         results.append(result)
@@ -117,9 +117,9 @@ class CoordinatesSearch(Search):
         return ListUtils.flat(results)
 
     @staticmethod
-    def scrap_results_linear_x_times(times, lon_min, lon_max, lat_min, lat_max, scrapper):
+    def search_by_coordinates_linear_max_n_matches(matches, lon_min, lon_max, lat_min, lat_max, scrapper):
         results = []
-        counter = times
+        counter = matches
 
         finished = False
         for x in range(lon_min, lon_max):
@@ -130,7 +130,7 @@ class CoordinatesSearch(Search):
 
                 try:
 
-                    result = scrapper.scrap_coord(x_scaled, y_scaled)
+                    result = scrapper.process_search_by_coordinates(x_scaled, y_scaled)
 
                     if result is not None:
                         results.append(result)
@@ -159,7 +159,7 @@ class CoordinatesSearch(Search):
         return ListUtils.flat(results)
 
     @staticmethod
-    def scrap_results_random_x_times(times, lon_min, lon_max, lat_min, lat_max, scrapper):
+    def search_by_coordinates_random_max_n_matches(times, lon_min, lon_max, lat_min, lat_max, scrapper):
         results = []
         counter = times
         while counter > 0:
@@ -170,7 +170,7 @@ class CoordinatesSearch(Search):
             y_scaled = y / config['scale']
 
             try:
-                cadaster_entry = scrapper.scrap_coord(x_scaled, y_scaled)
+                cadaster_entry = scrapper.process_search_by_coordinates(x_scaled, y_scaled)
 
                 if len(cadaster_entry) > 0:
                     results.append(cadaster_entry)
