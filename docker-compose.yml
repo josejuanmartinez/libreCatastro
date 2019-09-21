@@ -28,7 +28,7 @@ services:
   logstash:
     image: docker.elastic.co/logstash/logstash:6.3.2
     volumes:
-      - /Users/josejuan.martinez/sdh:/shared
+      - /home/ubuntu/sdh:/shared
     hostname: logstash
     networks:
     - ELK
