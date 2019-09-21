@@ -31,19 +31,19 @@ class ElasticSearchUtils:
                             "type": "nested",
                             "properties":
                             {
-                                "door": "keyword",
-                                "doorway": "keyword",
-                                "floor": "keyword",
+                                "door": {"type": "keyword"},
+                                "doorway": {"type": "keyword"},
+                                "floor": {"type": "keyword"},
                                 "reform": {
-                                    "type": "nested",
+                                    "type": {"type": "nested"},
                                     "properties":
                                         {
-                                            "type": "keyword",
-                                            "year": "keyword"
+                                            "type": {"type": "keyword"},
+                                            "year": {"type": "keyword"},
                                         }
                                 },
-                                "surface": "keyword",
-                                "use": "keyword"
+                                "surface": {"type": "keyword"},
+                                "use": {"type": "keyword"}
                             }
                         }
                     },
