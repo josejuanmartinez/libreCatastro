@@ -56,3 +56,17 @@ class ElasticSearchUtils:
         logger.debug("Deleting 'cadaster' index...")
         res = es.indices.delete(index='cadaster', ignore=[400, 404])
         logger.debug(res)
+
+    @staticmethod
+    def create_index_companies():
+        es = Elasticsearch()
+        request_body = {
+            "settings": {
+                "number_of_shards": 5,
+                "number_of_replicas": 1
+            },
+        }
+        logger.debug("Creating 'borme' index...")
+        res = es.indices.create(index='borme', body=request_body)
+        logger.debug(res)
+

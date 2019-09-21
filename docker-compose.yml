@@ -9,13 +9,30 @@ services:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    hostname: elasticsearch
     ulimits:
       memlock:
         soft: -1
         hard: -1
     ports:
       - "9200:9200"
+    networks:
+    - ELK
   kibana:
-    image: docker.elastic.co/geometry/geometry:6.3.2
+    image: docker.elastic.co/kibana/kibana:6.3.2
+    hostname: kibana
     ports:
       - "5601:5601"
+    networks:
+    - ELK
+  logstash:
+    image: docker.elastic.co/logstash/logstash:6.3.2
+    volumes:
+      - /Users/josejuan.martinez/sdh:/shared
+    hostname: logstash
+    networks:
+    - ELK
+
+networks:
+  ELK:
+    driver: "bridge"

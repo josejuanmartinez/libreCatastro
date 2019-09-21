@@ -9,6 +9,7 @@ from src.librecatastro.domain.cadaster_entry.cadaster_entry_xml import CadasterE
 from src.librecatastro.scrapping.parsers.parser_xml import ScrapperXML, ParserXML
 from src.librecatastro.scrapping.scrappers.scrapper_xml import ScrapperXML
 from src.settings import config
+from src.utils.elasticsearch_utils import ElasticSearchUtils
 
 
 class ScrapperXMLTests(unittest.TestCase):
