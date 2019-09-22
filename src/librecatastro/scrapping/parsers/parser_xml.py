@@ -155,7 +155,8 @@ class ParserXML(Parser):
                         "ERROR AT ADDRESS {} {} {} {} {}".format(tv, nv, counter, prov_name, city_name))
                     logger.error("=============================================")
                     logger.error(e, exc_info=True)
-                    logger.error("...sleeping...")
+                    logger.error("...sleeping due to connection reset...")
+                    logger.debug("...sleeping due to connection reset...")
                     logger.error("=============================================")
                     ''' Could be a service Unavailable or denegation of service'''
                     num_scrapping_fails -= 1

@@ -63,7 +63,8 @@ class CoordinatesSearcher(Searcher):
                     logger.error("ERROR AT LONGITUDE {} LATITUDE {}".format(x_scaled, y_scaled))
                     logger.error("=============================================")
                     logger.error(e, exc_info=True)
-                    logger.error("...sleeping...")
+                    logger.error("...sleeping due to connection reset...")
+                    logger.debug("...sleeping due to connection reset...")
                     logger.error("=============================================")
                     ''' Could be a service Unavailable or denegation of service'''
                     sleep(config['sleep_dos_time'])
