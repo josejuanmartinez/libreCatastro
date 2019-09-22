@@ -15,7 +15,7 @@ logger = CadastroLogger(__name__).logger
 class ScrapperHTML(Scrapper):
     """HTML Catastro Scrapper"""
 
-    URL = "http://ovc.catastro.meh.es/ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR?SRS=EPSG:4226&Coordenada_X={}&Coordenada_Y={}"
+    URL = "http://ovc.catastro.meh.es/ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR?SRS=EPSG:4326&Coordenada_X={}&Coordenada_Y={}"
     URL_REF = "https://www1.sedecatastro.gob.es/CYCBienInmueble/OVCListaBienes.aspx?rc1={}&rc2={}"
     URL_REF_FULL = "https://www1.sedecatastro.gob.es/CYCBienInmueble/OVCConCiud.aspx?RefC={}&RCCompleta={}&del={}&mun={}"
 

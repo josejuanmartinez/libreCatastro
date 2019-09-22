@@ -159,10 +159,11 @@ class CoordinatesSearcher(Searcher):
         return ListUtils.flat(results)
 
     @staticmethod
-    def search_by_coordinates_random_max_n_matches(times, lon_min, lon_max, lat_min, lat_max, scrapper):
+    def search_by_coordinates_random_max_n_matches(times, lon_min, lon_max, lat_min, lat_max, parser):
         results = []
         counter = times
         while counter > 0:
+
             x = random.randrange(lon_min, lon_max)
             y = random.randrange(lat_min, lat_max)
 
@@ -170,7 +171,7 @@ class CoordinatesSearcher(Searcher):
             y_scaled = y / config['scale']
 
             try:
-                cadaster_entry = scrapper.process_search_by_coordinates(x_scaled, y_scaled)
+                cadaster_entry = parser.process_search_by_coordinates(x_scaled, y_scaled)
 
                 if len(cadaster_entry) > 0:
                     results.append(cadaster_entry)

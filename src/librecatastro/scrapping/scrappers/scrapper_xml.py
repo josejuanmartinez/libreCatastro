@@ -20,7 +20,7 @@ class ScrapperXML(Scrapper):
 
     @classmethod
     def get_coord(cls,x, y):
-        params = {'SRS': 'EPSG:4230', 'Coordenada_X': x, 'Coordenada_Y': y}
+        params = {'SRS': 'EPSG:4326', 'Coordenada_X': x, 'Coordenada_Y': y}
         url = cls.URL_LOCATIONS_BASE.format("/OVCCoordenadas.asmx/Consulta_RCCOOR")
         response = requests.get(url, params=params)
 

@@ -6,42 +6,12 @@ import unittest
 from time import sleep
 
 from src.librecatastro.domain.cadaster_entry.cadaster_entry_xml import CadasterEntryXML
-from src.librecatastro.scrapping.parsers.parser_xml import ScrapperXML, ParserXML
+from src.librecatastro.scrapping.parsers.parser_xml import ParserXML
 from src.librecatastro.scrapping.scrappers.scrapper_xml import ScrapperXML
 from src.settings import config
-from src.utils.elasticsearch_utils import ElasticSearchUtils
 
 
 class ScrapperXMLTests(unittest.TestCase):
-    def test_scrapper_retrieves_dict_provinces(self):
-        try:
-            self.assertEqual(ScrapperXML.get_provinces().consulta_provinciero.control.cuprov, '48')
-        except:
-            self.assertFalse(config['servers_down_message'])
-            exit(-1)
-
-    def test_scrapper_retrieves_dict_cities(self):
-        try:
-            self.assertEqual(ScrapperXML.get_cities('ALACANT').consulta_municipiero.control.cumun, '141')
-        except:
-            self.assertFalse(config['servers_down_message'])
-            exit(-1)
-
-    def test_scrapper_retrieves_dict_addresses(self):
-        try:
-            self.assertEqual(ScrapperXML.get_addresses('ALACANT', 'AGOST').consulta_callejero.control.cuca, '117')
-        except:
-            self.assertFalse(config['servers_down_message'])
-            exit(-1)
-
-    def test_get_cadaster_entries_by_cadaster_is_up(self):
-        cadasters = ['2503906VK4820D0001MX']
-        try:
-            for cadaster in cadasters:
-                ScrapperXML.get_cadaster_entries_by_cadaster('', '', cadaster)
-        except:
-            self.assertFalse(config['servers_down_message'])
-            exit(-1)
 
     def test_scrapper_retrieves_dict_addresses_iter(self):
         iterator = ScrapperXML.get_address_iter()

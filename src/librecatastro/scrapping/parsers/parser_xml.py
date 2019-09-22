@@ -15,6 +15,8 @@ from src.utils.cadastro_logger import CadastroLogger
 
 from dotmap import DotMap
 
+from src.utils.list_utils import ListUtils
+
 '''Logger'''
 logger = CadastroLogger(__name__).logger
 
@@ -124,7 +126,11 @@ class ParserXML(Parser):
         return results
 
     @classmethod
-    def process_search_by_provinces(cls, prov_list, pictures=False, start_from=''):
+    def process_search_by_provinces(cls, prov_list, pictures=False, start_from='', max_times=None):
+
+        times = 0
+        results = []
+
         for prov_name, prov_num, city_name, city_num, address, tv, nv in Scrapper.get_address_iter(prov_list, start_from):
             if tv == DotMap() or nv == DotMap():
                 continue
@@ -139,6 +145,10 @@ class ParserXML(Parser):
                         num_scrapping_fails -= 1
                     else:
                         num_scrapping_fails = 10
+                        times += 1
+                        results.append(res)
+                        if max_times is not None and times >= max_times:
+                            return ListUtils.flat(results)
 
                 except urllib.error.HTTPError as e:
                     logger.error(
@@ -159,6 +169,8 @@ class ParserXML(Parser):
                     num_scrapping_fails -= 1
 
                 counter += 1
+
+        return results
 
     ''' Parsing calls '''
 

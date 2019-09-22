@@ -45,8 +45,13 @@ class ParserHTML(Parser):
         results = []
         if pc1 is not None and pc2 is not None:
             cadaster = ''.join([pc1.text, pc2.text])
-            htmls = ScrapperHTML.scrap_cadaster(cadaster, None, None, pictures)
-            for html, picture in htmls.items():
+            html_picture_tuples = ScrapperHTML.scrap_cadaster(cadaster, None, None, pictures)
+
+            if not isinstance(html_picture_tuples, list):
+                html_picture_tuples = [html_picture_tuples]
+
+            for html_picture_tuple in html_picture_tuples:
+                html, picture = html_picture_tuple
                 cadaster_entry = cls.parse_html_parcela(html, x, y, picture)
                 cadaster_entry.to_elasticsearch()
                 results.append(cadaster_entry)
@@ -54,7 +59,10 @@ class ParserHTML(Parser):
         return results
 
     @classmethod
-    def process_search_by_provinces(cls, prov_list, pictures=False, start_from=''):
+    def process_search_by_provinces(cls, prov_list, pictures=False, start_from='', max_times=None):
+
+        times = 0
+        results = []
 
         num = ''
         for prov_name, prov_num, city_name, city_num, address, tv, nv in Scrapper.get_address_iter(prov_list, start_from):
@@ -110,8 +118,13 @@ class ParserHTML(Parser):
                             for html, picture in htmls:
                                 cadaster_entry = cls.parse_html_parcela(html, lon, lat, picture)
                                 cadaster_entry.to_elasticsearch()
+                                results.append(cadaster_entry)
 
                         counter += 1
+                        times += 1
+
+                        if max_times is not None and times >= max_times:
+                            return results
 
                 except urllib.error.HTTPError as e:
                     logger.error(
