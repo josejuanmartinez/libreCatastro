@@ -71,7 +71,7 @@ class ParserHTML(Parser):
             if tv == DotMap() or nv == DotMap():
                 continue
 
-            if ElasticSearchUtils.check_if_address_present("{} {}".format(tv, nv), prov_name, city_name):
+            if ElasticSearchUtils.check_if_address_present("{} {}".format(tv, nv), city_name, prov_name):
                 logger.debug("Skipping {} {} {} {} because it's been already scrapped.".format(tv, nv,
                                                                                                prov_name, city_name))
                 continue
