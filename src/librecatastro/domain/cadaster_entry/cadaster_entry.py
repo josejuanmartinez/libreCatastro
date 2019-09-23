@@ -58,6 +58,7 @@ class CadasterEntry:
         es = Elasticsearch()
         try:
             query = '{"query":{"bool":{"must":[{"match":{"cadaster":"' + self.cadaster + '"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"aggs":{}}'
+            print(query)
             res = es.search(index=config['elasticsearch-index'], body=query)
             hits = DotMap(res).hits.total
             if hits == DotMap():

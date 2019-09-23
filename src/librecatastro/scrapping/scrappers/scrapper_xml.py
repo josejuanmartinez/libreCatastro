@@ -33,11 +33,11 @@ class ScrapperXML(Scrapper):
         return xml_dict_map
 
     @classmethod
-    def get_cadaster_entries_by_cadaster(cls, provincia, municipio, rc):
+    def get_cadaster_entries_by_cadaster(cls, prov_name, city_name, rc):
         """ provincia and municipio are optional and can be set to '' """
 
-        params = {"Provincia": provincia,
-                  "Municipio": municipio,
+        params = {"Provincia": prov_name,
+                  "Municipio": city_name,
                   "RC": rc}
 
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/Consulta_DNPRC")

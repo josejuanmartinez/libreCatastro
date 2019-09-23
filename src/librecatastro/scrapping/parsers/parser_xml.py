@@ -52,11 +52,11 @@ class ParserXML(Parser):
             entry = ScrapperXML.get_cadaster_entries_by_cadaster('', '', ''.join([pc1, pc2]))
             picture = None
             if entry.consulta_dnp.bico.bi.dt.loine != DotMap():
+                prov_num = entry.consulta_dnp.bico.bi.dt.loine.cp
+                city_num = entry.consulta_dnp.bico.bi.dt.cmc
+
                 # Parcela
-                if pictures:
-                    prov_num = entry.consulta_dnp.bico.bi.dt.loine.cp
-                    city_num = entry.consulta_dnp.bico.bi.dt.cmc
-                    if prov_num != DotMap() and city_num != DotMap():
+                if pictures and prov_num != DotMap() and city_num != DotMap():
                         picture = Scrapper.scrap_site_picture(prov_num, city_num, ''.join([pc1, pc2]))
                 cadaster_entry = CadasterEntryXML(entry, x, y, picture)
                 cadaster_entry.to_elasticsearch()
@@ -83,7 +83,7 @@ class ParserXML(Parser):
 
                     try:
                         # Try to get info by complete cadaster num
-                        sub_entry = ScrapperXML.get_cadaster_entries_by_cadaster(prov_num, city_num, cadaster)
+                        sub_entry = ScrapperXML.get_cadaster_entries_by_cadaster('', '', cadaster)
                     except:
                         # Cadastro did not return anything by cadaster entry (error? bug?)
                         # Try to get it by complete address
@@ -260,7 +260,7 @@ class ParserXML(Parser):
 
                         try:
                             # Try to get info by complete cadaster num
-                            sub_entry = ScrapperXML.get_cadaster_entries_by_cadaster(prov_num, city_num, cadaster)
+                            sub_entry = ScrapperXML.get_cadaster_entries_by_cadaster(prov_name, city_name, cadaster)
                         except:
                             # Cadastro did not return anything by cadaster entry (error? bug?)
                             # Try to get it by complete address
