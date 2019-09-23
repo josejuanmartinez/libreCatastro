@@ -108,7 +108,6 @@ class ElasticSearchUtils:
         es = Elasticsearch()
         try:
             res = es.search(config['elasticsearch-index'], config['elasticsearch-doc'], query)
-            print(query)
             hits = DotMap(res).hits.total
             if hits == DotMap():
                 hits = 0
