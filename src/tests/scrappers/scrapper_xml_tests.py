@@ -36,7 +36,7 @@ class ScrapperXMLTests(unittest.TestCase):
             sub_entry = ScrapperXML.get_cadaster_entries_by_cadaster(prov_name, city_name, cadaster)
             cadaster_entry = CadasterEntryXML(sub_entry)
             cadaster_entry.to_elasticsearch()
-            self.assertIsNotNone(cadaster_entry.from_elasticsearch())
+            self.assertTrue(cadaster_entry.from_elasticsearch())
             sleep(config['sleep_time'])
             counter += 1
         self.assertEqual(counter, 2)
@@ -57,7 +57,7 @@ class ScrapperXMLTests(unittest.TestCase):
             sub_entry = ScrapperXML.get_cadaster_entries_by_cadaster(prov_name, city_name, cadaster)
             cadaster_entry = CadasterEntryXML(sub_entry)
             cadaster_entry.to_elasticsearch()
-            self.assertIsNotNone(cadaster_entry.from_elasticsearch())
+            self.assertTrue(cadaster_entry.from_elasticsearch())
             sleep(config['sleep_time'])
 
     def test_no_es_pt_pu_creates_entry_in_elasticsearch(self):
@@ -76,7 +76,7 @@ class ScrapperXMLTests(unittest.TestCase):
             sub_entry = ScrapperXML.get_cadaster_entries_by_cadaster(prov_name, city_name, cadaster)
             cadaster_entry = CadasterEntryXML(sub_entry)
             cadaster_entry.to_elasticsearch()
-            self.assertIsNotNone(cadaster_entry.from_elasticsearch())
+            self.assertTrue(cadaster_entry.from_elasticsearch())
             sleep(config['sleep_time'])
 
     def test_no_es_pt_pu_creates_entry_in_elasticsearch_2(self):
@@ -96,7 +96,7 @@ class ScrapperXMLTests(unittest.TestCase):
             sub_entry = ScrapperXML.get_cadaster_entries_by_cadaster(prov_name, city_name, cadaster)
             cadaster_entry = CadasterEntryXML(sub_entry)
             cadaster_entry.to_elasticsearch()
-            self.assertIsNotNone(cadaster_entry.from_elasticsearch())
+            self.assertTrue(cadaster_entry.from_elasticsearch())
             sleep(config['sleep_time'])
 
     def test_multiparcela_coord_creates_n_entries(self):

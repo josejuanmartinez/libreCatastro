@@ -23,13 +23,13 @@ class CoordinatesSearcherTests(unittest.TestCase):
         cadaster_list = self.search_random_until_x_times_found_by_html(5)
         for cadaster in cadaster_list:
             cadaster.to_elasticsearch()
-            self.assertIsNotNone(cadaster.from_elasticsearch())
+            self.assertTrue(cadaster.from_elasticsearch())
 
     def test_search_random_until_1_is_stored_in_elasticsearch(self):
         cadaster_list = self.search_random_until_x_times_found_by_html(1)
         for cadaster in cadaster_list:
             cadaster.to_elasticsearch()
-            self.assertIsNotNone(cadaster.from_elasticsearch())
+            self.assertTrue(cadaster.from_elasticsearch())
 
     def test_loading_point_is_in_polygon_returns_true(self):
         polygon = GeoPolygon(os.path.join(config['coordinates_path'], 'spain_polygon.json'))

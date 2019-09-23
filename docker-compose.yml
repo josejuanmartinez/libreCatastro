@@ -10,7 +10,7 @@ services:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
-      - /home/ubuntu/ELK_data/elasticsearch:/usr/share/elasticsearch/data:rw
+      - ${ELK_DATA}/elasticsearch:/usr/share/elasticsearch/data:rw
     hostname: elasticsearch
     ulimits:
       memlock:
@@ -34,7 +34,7 @@ services:
     depends_on:
     - elasticsearch
     volumes:
-      - /home/ubuntu/ELK_data/logstash/csv:/shared:rw
+      - ${ELK_DATA}/logstash/csv:/shared:rw
     hostname: logstash
     networks:
     - ELK

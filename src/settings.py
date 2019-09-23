@@ -8,6 +8,7 @@ root_path = os.path.dirname(os.path.abspath(__file__))
 config = {
     "separator": "####",
     "elasticsearch-index": "cadaster",
+    "elasticsearch-doc": "cadaster_doc",
     "error_log_file": os.path.join(root_path, 'logs', 'log'),
     "tracking_log_file": os.path.join(root_path, 'logs', 'track'),
     "scale": 10000,

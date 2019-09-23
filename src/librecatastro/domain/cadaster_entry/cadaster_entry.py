@@ -4,6 +4,7 @@
 import json
 from abc import abstractmethod
 
+from dotmap import DotMap
 from elasticsearch import Elasticsearch
 
 from src.settings import config
@@ -53,11 +54,15 @@ class CadasterEntry:
         return res
 
     def from_elasticsearch(self):
-        res = None
+        res = False
         es = Elasticsearch()
         try:
             query = '{"query":{"bool":{"must":[{"match":{"cadaster":"' + self.cadaster + '"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"aggs":{}}'
             res = es.search(index=config['elasticsearch-index'], body=query)
+            hits = DotMap(res).hits.total
+            if hits == DotMap():
+                hits = 0
+            res = (hits > 0)
         except Exception as e:
             logger.error(e)
 

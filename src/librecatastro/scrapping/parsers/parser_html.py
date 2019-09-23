@@ -14,6 +14,7 @@ from src.librecatastro.scrapping.scrappers.scrapper_html import ScrapperHTML
 from src.settings import config
 
 from src.utils.cadastro_logger import CadastroLogger
+from src.utils.elasticsearch_utils import ElasticSearchUtils
 
 '''Logger'''
 logger = CadastroLogger(__name__).logger
@@ -68,6 +69,11 @@ class ParserHTML(Parser):
         for prov_name, prov_num, city_name, city_num, address, tv, nv in Scrapper.get_address_iter(prov_list, start_from):
 
             if tv == DotMap() or nv == DotMap():
+                continue
+
+            if ElasticSearchUtils.check_if_address_present("{} {} {}".format(tv, address, nv), prov_name, city_name):
+                logger.debug("Skipping {} {} {} {} {} because it's been already scrapped.".format(tv, address, nv,
+                                                                                                  prov_name, city_name))
                 continue
 
             num_scrapping_fails = 10

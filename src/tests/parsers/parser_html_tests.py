@@ -10,13 +10,13 @@ class ParserHTMLTests(unittest.TestCase):
         cadaster_list = ParserHTML.process_search_by_coordinates(-3.47600944027389, 40.5370635727521)
         self.assertEqual(len(cadaster_list), 14)
         for cadaster in cadaster_list:
-            self.assertIsNotNone(cadaster.from_elasticsearch())
+            self.assertTrue(cadaster.from_elasticsearch())
 
     def test_search_by_provinces_creates_and_stores_in_elasticsearch(self):
         cadaster_list = ParserHTML.process_search_by_provinces(['MADRID'], max_times=1)
         self.assertEqual(len(cadaster_list), 14)
         for cadaster in cadaster_list:
-            self.assertIsNotNone(cadaster.from_elasticsearch())
+            self.assertTrue(cadaster.from_elasticsearch())
 
     def test_search_site_lot_is_set(self):
         cadaster_list = ScrapperHTML.scrap_cadaster('45134A02500003')
