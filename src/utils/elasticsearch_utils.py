@@ -112,7 +112,6 @@ class ElasticSearchUtils:
             if hits == DotMap():
                 hits = 0
             res = (hits > 0)
-            logger.debug("Found in ES: {}".format(hits))
         except Exception as e:
             logger.debug(e)
 
