@@ -15,7 +15,10 @@ logger = CadastroLogger(__name__).logger
 
 
 class Scrapper:
-    """Catastro web services parametrized"""
+    """Scrapper class, from which inheritates ScrapperHTML and ScrapperXML, and which
+    implements common scrapping functions for both HTML and XML"""
+
+    '''Catastro web services parametrized'''
 
     URL_PICTURES = "https://www1.sedecatastro.gob.es/Cartografia/GeneraGraficoParcela.aspx?del={}&mun={}&refcat={}&AnchoPixels={}&AltoPixels={}"
     URL_LOCATIONS_BASE = "http://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC{}"
@@ -25,6 +28,8 @@ class Scrapper:
 
     @classmethod
     def get_provinces(cls):
+        """Get all provinces registered by Catastro (call only available from XML but used in both XML and HTML)"""
+
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaProvincia")
         response = requests.get(url)
         xml = response.content
@@ -33,10 +38,16 @@ class Scrapper:
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
-    def get_cities(cls, provincia, municipio=None):
-        params = {'Provincia': provincia}
-        if municipio:
-            params['Municipio'] = municipio
+    def get_cities(cls, prov_name, city_name=None):
+        """
+        Get all cities registered by Catastro (call only available from XML but used in both XML and HTML)
+        :param prov_name: Name of the province (from Cadaster Province List)
+        :param city_name: Optional. Name of the city (from Cadaster City List) in case a specific city is required
+        :return: DotMap (dict with properties accessible by '.') with all the cities
+        """
+        params = {'Provincia': prov_name}
+        if city_name:
+            params['Municipio'] = city_name
         else:
             params['Municipio'] = ''
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaMunicipio")
@@ -47,15 +58,25 @@ class Scrapper:
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
-    def get_addresses(cls, provincia, municipio, tipovia=None, nombrevia=None):
-        params = {'Provincia': provincia,
-                  'Municipio': municipio}
-        if tipovia:
-            params['TipoVia'] = tipovia
+    def get_addresses(cls, prov_name, city_name, tv=None, nv=None):
+        """
+        Get all addresses registered by Catastro (call only available from XML but used in both XML and HTML)
+
+        :param prov_name: Name of the province (from Cadaster Province List)
+        :param city_name: Name of the city (from Cadaster City List)
+        :param tv: Optional. Name of the kind of street (CL, AV ...) in case a specific kind is needed
+        :param nv: Optional. Name of the street in case a specific street is needed
+        :return: DotMap (dict with properties accessible by '.') with all the cities
+        """
+
+        params = {'Provincia': prov_name,
+                  'Municipio': city_name}
+        if tv:
+            params['TipoVia'] = tv
         else:
             params['TipoVia'] = ''
-        if nombrevia:
-            params['NombreVia'] = nombrevia
+        if nv:
+            params['NombreVia'] = nv
         else:
             params['NombreVia'] = ''
 
@@ -68,8 +89,14 @@ class Scrapper:
 
     @classmethod
     def get_address_iter(cls, prov_list=None, start_from=''):
-        """Scraps properties by addresses"""
+        """
+        Funcion that, instead of returning all the addresses, returns an iterator to all the addresses of a province list
+        to optimize performance.
 
+        :param prov_list: List of province names to get addresses from (from Cadaster Province List)
+        :param start_from: Optional. Name of the city where to start from in a province (from Cadaster City List)
+        :return: iterator to all the addresses of the provinces of the list
+        """
         if prov_list is None:
             prov_list = []
 
@@ -121,6 +148,14 @@ class Scrapper:
 
     @classmethod
     def scrap_site_picture(cls, prov_num, city_num, cadaster):
+        """
+        Gets the house plan picture.
+
+        :param prov_num: Province number.
+        :param city_num: City number.
+        :param cadaster: Cadaster number.
+        :return: an image, coded in base64.
+        """
 
         url_pic = cls.URL_PICTURES.format(prov_num, city_num, cadaster, config['width_px'], config['height_px'])
 
@@ -136,16 +171,26 @@ class Scrapper:
         return b64_image
 
     @classmethod
-    def get_cadaster_by_address(cls, provincia, municipio, tipovia, nombrevia, numero):
-        params = {'Provincia': provincia,
-                  'Municipio': municipio,
-                  'TipoVia': tipovia,
-                  'NomVia': nombrevia,
-                  'Numero': str(numero)}
+    def get_cadaster_by_address(cls, prov_name, city_name, tv, nv, num):
+        """
+        Gets the cadaster information, based on an address.
+
+        :param prov_name: Name of the province.
+        :param city_name: Name of the city.
+        :param tv: Kind of street (CL, AV...)
+        :param nv: Name of the street
+        :param num: Number of the street
+        :return: DotMap (dict with properties accessible by '.') with the cadaster information
+        """
+        params = {'Provincia': prov_name,
+                  'Municipio': city_name,
+                  'TipoVia': tv,
+                  'NomVia': nv,
+                  'Numero': str(num)}
 
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaNumero")
 
-        logger.debug("====Dir: {} {} {} {} {}====".format(tipovia, nombrevia, numero, municipio, provincia))
+        logger.debug("====Dir: {} {} {} {} {}====".format(tv, nv, num, city_name, prov_name))
         logger.debug("URL for address: {}".format(url + '?' + urllib.parse.urlencode(params)))
 
         response = requests.get(url, params=params)
@@ -155,8 +200,17 @@ class Scrapper:
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
-    def get_coords_from_cadaster(cls, provincia, municipio, cadaster):
-        params = {'Provincia': provincia, 'Municipio': municipio, 'SRS': 'EPSG:4326', 'RC': cadaster}
+    def get_coords_from_cadaster(cls, prov_name, city_name, cadaster):
+        """
+        Returns the lon (xcen) and lat (ycen) of a property, identified by its cadaster number
+        and province and city names.
+
+        :param prov_name: Province name.
+        :param city_name: City name.
+        :param cadaster: Cadaster number.
+        :return: DotMap (dict with properties accessible by '.') with the location information
+        """
+        params = {'Provincia': prov_name, 'Municipio': city_name, 'SRS': 'EPSG:4326', 'RC': cadaster}
         url = cls.URL_LOCATIONS_BASE.format("/OVCCoordenadas.asmx/Consulta_CPMRC")
 
         logger.debug("URL for coordinates: {}".format(url + '?' + urllib.parse.urlencode(params)))

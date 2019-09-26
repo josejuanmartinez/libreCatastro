@@ -11,10 +11,15 @@ from src.librecatastro.scrapping.searchers.provinces_searcher import ProvincesSe
 from src.settings import config
 from src.tests.servers_health.server_health_tests import ServerHealthTests
 
+""" Main executable file, that processes all the arguments with ArguentParser
+and do different functionalities, like listing provinces, cities, scrapping from HTML,
+from XML, based on coordinates files or a list of provinces, etc """
+
 if __name__ == "__main__":
+    ''' Definition of command line arguments for ArgumentParser '''
     parser = argparse.ArgumentParser(description='Runs libreCadastro')
     parser.add_argument('--coords', action='store_true', dest='coords', default=False)
-    parser.add_argument('--filenames', action='store', nargs='+', dest='filenames', default=[])
+    parser.add_argument('--coords-filenames', action='store', nargs='+', dest='filenames', default=[])
     parser.add_argument('--provinces', action='store', nargs='+', dest='provinces', default=[])
     parser.add_argument('--sleep', action='store', dest='sleep', type=int, default=5)
     parser.add_argument('--html', dest='html', default=False, action='store_true')
@@ -25,14 +30,17 @@ if __name__ == "__main__":
     parser.add_argument('--listcities', action='store', nargs=1, dest='listcities', default=[])
     parser.add_argument('--health', action='store_true', dest='health', default=False)
 
+    ''' Parsing of arguments from command line'''
     args = parser.parse_args(sys.argv[1:])
 
+    ''' Configuration of parameters to be overwriten '''
     if args.sleep:
         config['sleep_time'] = args.sleep
 
     if args.scale:
         config['scale'] = args.scale
 
+    ''' Listing functionality '''
     if args.listprovinces:
         ProvincesSearcher.list_provinces()
         exit(0)
@@ -41,10 +49,12 @@ if __name__ == "__main__":
         ProvincesSearcher.list_cities(args.listcities[0])
         exit(0)
 
+    ''' Cadaster server checking '''
     if args.health:
         ServerHealthTests.healthcheck()
         exit(0)
 
+    ''' Scrapping / Parsing core functionality'''
     parser = ParserHTML if args.html else ParserXML
 
     filenames = args.filenames

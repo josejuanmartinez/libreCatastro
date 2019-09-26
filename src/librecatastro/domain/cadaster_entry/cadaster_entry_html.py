@@ -13,7 +13,8 @@ logger = CadastroLogger(__name__).logger
 
 
 class CadasterEntryHTML(CadasterEntry):
-    """Cadaster class, that stores all the information about a surface and its properties"""
+    """Cadaster class, obtained from parsing HTML, that inheritates from Cadaster, and
+     stores all the information about a surface and its properties"""
 
     def __init__(self, description_data):
         self.address = Address(description_data[u'Localización'])

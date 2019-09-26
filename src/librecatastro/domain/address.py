@@ -12,6 +12,7 @@ logger = CadastroLogger(__name__).logger
 
 class Address:
     """ Domain class for storing Address in Catastro parsers"""
+
     def __init__(self, address):
         self.full_address = address.strip()
 
@@ -31,7 +32,7 @@ class Address:
         self.site = None
         self.lot = None
 
-        ''' NLP searchers '''
+        ''' Parses address and extracts different information '''
         self.first_line = self.get_first_line()
         self.second_line = self.get_second_line()
 
@@ -48,6 +49,7 @@ class Address:
         self.city = self.get_city()
 
     def get_first_line(self):
+        """ Extracts first line of the address if not yet done"""
         if self.first_line is not None:
             return self.first_line
         second_line = re.search(config['separator'], self.full_address)
@@ -64,6 +66,7 @@ class Address:
             else self.full_address
 
     def get_second_line(self):
+        """ Extracts the second line of the address if not yet done """
         if self.second_line is not None:
             return self.second_line
 
@@ -81,9 +84,11 @@ class Address:
             else self.full_address
 
     def get_street(self):
+        """ Alias to get_first_line() """
         return self.get_first_line()
 
     def get_doorway(self):
+        """ Gets the doorway(escalera) of an address """
         if self.doorway is not None:
             return self.doorway
 
@@ -96,6 +101,7 @@ class Address:
         return doorway_text
 
     def get_door(self):
+        """ Gets the door (puerta) of an address """
         if self.door is not None:
             return self.door
 
@@ -108,6 +114,7 @@ class Address:
         return door_text
 
     def get_floor(self):
+        """ Gets the floor (planta) of an address """
         if self.floor is not None:
             return self.floor
 
@@ -120,6 +127,7 @@ class Address:
         return floor_text
 
     def get_site(self):
+        """ Gets the site (polígono) of an address """
         if self.site is not None:
             return self.site
 
@@ -132,6 +140,7 @@ class Address:
         return site_text
 
     def get_lot(self):
+        """ Gets the lot (parcela) of an address """
         if self.lot is not None:
             return self.lot
 
@@ -144,6 +153,7 @@ class Address:
         return lot_text
 
     def get_cp(self):
+        """ Gets the postal code (CP) of an address """
         if self.cp is not None:
             return self.cp
 
@@ -157,6 +167,7 @@ class Address:
         return cp_text
 
     def get_city(self):
+        """ Gets the city of an address """
         if self.city is not None:
             return self.city
 
@@ -168,6 +179,7 @@ class Address:
         return city_text.strip()
 
     def get_province(self):
+        """ Gets the province of an address """
         if self.province_parentheses is not None and self.province is not None:
             return self.province_parentheses, self.province
 
@@ -180,4 +192,5 @@ class Address:
         return province_parentheses_text, province_text
 
     def to_json(self):
+        """ Transforms an object of this class into a json dict """
         return dict(full_address=self.full_address, first_line=self.first_line, second_line=self.second_line, street=self.street, cp=self.cp, city=self.city, province_parantheses=self.province_parentheses, province=self.province, doorway=self.doorway, floor=self.floor, door=self.door, site=self.site, lot=self.lot)

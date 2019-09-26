@@ -16,7 +16,9 @@ logger = CadastroLogger(__name__).logger
 
 
 class CadasterEntry:
-
+    """ Parent class that stores information about an entry in the Cadaster.
+     It's instantiated from children classes (CadasterEntryHTML and CadasterEntryXML,
+     not directly"""
     @abstractmethod
     def __init__(self, cadaster_entry):
         self.address = cadaster_entry.address
@@ -33,13 +35,16 @@ class CadasterEntry:
         logger.debug(self.to_json_recursive())
 
     def to_json(self):
+        """ Transforms an object of this class into a json dict """
         return dict(address=self.address, cadaster=self.cadaster, type=self.type, use=self.use, surface=self.surface, year=self.year, location=self.location, gsurface=self.gsurface, constructions=self.constructions, picture=str(self.picture) if self.picture is not None else None, timestamp=self.timestamp)
 
     def to_json_recursive(self):
+        """ Transforms recursively this object and all the objects inside that implement to_json() """
         return json.dumps(self.to_json(), cls=JSONEncoder, sort_keys=True,
                           indent=4, separators=(',', ': '))
 
     def to_elasticsearch(self):
+        """ Gets stored in elastic search """
         es = Elasticsearch()
         res = None
         try:
@@ -54,6 +59,7 @@ class CadasterEntry:
         return res
 
     def from_elasticsearch(self):
+        """ Confirms for checking purposes that the entry has been stored in elastic search previously """
         res = False
         es = Elasticsearch()
         try:
