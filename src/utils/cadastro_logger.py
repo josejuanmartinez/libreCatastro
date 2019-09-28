@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import logging
 import logging.config
 import sys
@@ -40,5 +43,4 @@ class CadastroLogger:
         self.logger.addHandler(debug_file_handler)
         self.logger.addHandler(error_file_handler)
         self.logger.addHandler(tracking_file_handler)
-        pass
 

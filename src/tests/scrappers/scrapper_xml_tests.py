@@ -111,7 +111,7 @@ class ScrapperXMLTests(unittest.TestCase):
         nv = u'CANARIAS'
         num = 7
         cadaster = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
-        self.assertEqual(len(ParserXML.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 8)
+        self.assertEqual(len(ParserXML.parse_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 8)
 
     def test_multiparcela_address_creates_n_entries_2(self):
         prov_name = u'MADRID'
@@ -120,7 +120,7 @@ class ScrapperXMLTests(unittest.TestCase):
         nv = u'CALVARIO'
         num = 38
         cadaster = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
-        self.assertEqual(len(ParserXML.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 8)
+        self.assertEqual(len(ParserXML.parse_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 8)
 
     def test_poligono_or_rural_creates_entry(self):
         tv = 'CL'
@@ -129,7 +129,7 @@ class ScrapperXMLTests(unittest.TestCase):
         prov_name = 'MADRID'
         city_name = 'AJALVIR'
         cadaster = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
-        self.assertEqual(len(ParserXML.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 16)
+        self.assertEqual(len(ParserXML.parse_xml_by_address(cadaster, prov_name, city_name, tv, nv, False)), 16)
 
     def test_coordinates_are_in_good_format(self):
         tv = 'CL'
@@ -138,7 +138,7 @@ class ScrapperXMLTests(unittest.TestCase):
         prov_name = 'MADRID'
         city_name = 'GALAPAGAR'
         xml = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
-        cadaster_entry = ParserXML.process_xml_by_address(xml, prov_name, city_name, tv, nv, False)
+        cadaster_entry = ParserXML.parse_xml_by_address(xml, prov_name, city_name, tv, nv, False)
         self.assertEqual(cadaster_entry[0].location.lat, 40.6249762551374)
         self.assertEqual(cadaster_entry[0].location.lon, -4.02755522611211)
 
@@ -149,7 +149,7 @@ class ScrapperXMLTests(unittest.TestCase):
         prov_name = 'ALACANT'
         city_name = 'ALICANTE/ALACANT'
         xml = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, num)
-        cadaster_entries = ParserXML.process_xml_by_address(xml, prov_name, city_name, tv, nv, False)
+        cadaster_entries = ParserXML.parse_xml_by_address(xml, prov_name, city_name, tv, nv, False)
         for cadaster_entry in cadaster_entries:
             self.assertEqual(cadaster_entry.location.lat, 38.3495195831056)
             self.assertEqual(cadaster_entry.location.lon, -0.484612452235845)

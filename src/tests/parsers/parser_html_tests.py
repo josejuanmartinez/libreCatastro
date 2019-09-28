@@ -13,7 +13,7 @@ class ParserHTMLTests(unittest.TestCase):
             self.assertTrue(cadaster.from_elasticsearch())
 
     def test_search_by_provinces_creates_and_stores_in_elasticsearch(self):
-        cadaster_list = ParserHTML.process_search_by_provinces(['MADRID'], max_times=1)
+        cadaster_list = ParserHTML.process_search_by_provinces(['MADRID'], matches=1)
         self.assertEqual(len(cadaster_list), 14)
         for cadaster in cadaster_list:
             self.assertTrue(cadaster.from_elasticsearch())

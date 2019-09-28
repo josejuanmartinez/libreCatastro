@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from dotmap import DotMap
 from elasticsearch import Elasticsearch
 
@@ -15,6 +18,9 @@ class ElasticSearchUtils:
 
     @staticmethod
     def create_index():
+        """
+        Creates index in ElasticSearch
+        """
         ElasticSearchUtils.remove_index()
         es = Elasticsearch()
         request_body = {
@@ -78,6 +84,9 @@ class ElasticSearchUtils:
 
     @staticmethod
     def remove_index():
+        """
+        Removes index from ElasticSearch
+        """
         es = Elasticsearch()
         logger.debug("Deleting 'cadaster' index...")
         try:
@@ -90,6 +99,13 @@ class ElasticSearchUtils:
 
     @staticmethod
     def check_if_address_present(address, city_name, province_name):
+        """
+        Checks if an address has been already scrapped (to skip it).
+        :param address: full addres (including tipo de via, nombre de via ...)
+        :param city_name: City Name
+        :param province_name: Province Name
+        :return: True if already scrapped, False otherwise
+        """
         res = False
         query = {"query":
                      {"bool":

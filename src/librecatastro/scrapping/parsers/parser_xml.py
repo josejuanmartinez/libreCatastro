@@ -4,9 +4,6 @@
 import urllib.parse
 from urllib import error
 
-import requests
-import xmltodict
-
 from src.librecatastro.domain.cadaster_entry.cadaster_entry_xml import CadasterEntryXML
 from src.librecatastro.scrapping.parser import Parser
 from src.librecatastro.scrapping.scrapper import Scrapper
@@ -23,7 +20,7 @@ logger = CadastroLogger(__name__).logger
 
 
 class ParserXML(Parser):
-    """Parser class for Catastro XML"""
+    """Class that manages the processing of scrapped XML from Cadastro webservices"""
 
     def __init__(self):
         super().__init__()
@@ -31,11 +28,17 @@ class ParserXML(Parser):
     ''' Processing calls '''
     @classmethod
     def process_search_by_coordinates(cls, x, y, pictures=False):
-        """Scraps properties by coordinates"""
+        """
+        Searches by coordinate from XML and processes the result.
+        :param x: longitude
+        :param y: latitude
+        :param pictures: True if we want house plan pictures to be scrapped
+        :return: List of CadasterEntry objects
+        """
 
         results = []
 
-        xml_dict_map = ScrapperXML.get_coord(x, y)
+        xml_dict_map = ScrapperXML.scrap_coord(x, y)
         pc1 = None
         pc2 = None
         if xml_dict_map.consulta_coordenadas.coordenadas.coord.pc != DotMap():
@@ -127,8 +130,15 @@ class ParserXML(Parser):
         return results
 
     @classmethod
-    def process_search_by_provinces(cls, prov_list, pictures=False, start_from='', max_times=None):
-
+    def process_search_by_provinces(cls, prov_list, pictures=False, start_from='', matches=None):
+        """
+            Searches by province from XML and processes the result.
+            :param prov_list: List of province names
+            :param start_from: Name of the city of the first province to start from
+            :param pictures: True if we want house plan pictures to be scrapped
+            :param matches: Max number of matches (for debugging purporses mainly)
+            :return: List of CadasterEntry objects
+        """
         times = 0
         results = []
 
@@ -146,14 +156,14 @@ class ParserXML(Parser):
             while num_scrapping_fails > 0:
                 try:
                     cadaster = ScrapperXML.get_cadaster_by_address(prov_name, city_name, tv, nv, counter)
-                    res = cls.process_xml_by_address(cadaster, prov_name, city_name, tv, nv, counter, pictures)
+                    res = cls.parse_xml_by_address(cadaster, prov_name, city_name, tv, nv, counter, pictures)
                     if len(res) < 1:
                         num_scrapping_fails -= 1
                     else:
                         num_scrapping_fails = 10
                         times += 1
                         results.append(res)
-                        if max_times is not None and times >= max_times:
+                        if matches is not None and times >= matches:
                             return ListUtils.flat(results)
 
                 except urllib.error.HTTPError as e:
@@ -182,7 +192,18 @@ class ParserXML(Parser):
     ''' Parsing calls '''
 
     @classmethod
-    def process_xml_by_address(cls, numerero_map, prov_name, city_name, tv, nv, num, pictures=False):
+    def parse_xml_by_address(cls, numerero_map, prov_name, city_name, tv, nv, num, pictures=False):
+        """
+        Parses an XML and crates a CadasterEntry object
+        :param numerero_map: DotMap obtained from a previous call with information about the address to parse
+        :param prov_name: Province Name
+        :param city_name: City Name
+        :param tv: Kind of way (Tipo de Via) - CL (calle), AV (Avenida) ...
+        :param nv: Street name (Nombre de via)
+        :param num: Street number (Numero de via)
+        :param pictures: True if we want to scrap also house plan pictures. False otherwise.
+        :return: List of CadasterEntry objects
+        """
         results = []
         if numerero_map.consulta_numerero.lerr.err.cod != DotMap():
             return results

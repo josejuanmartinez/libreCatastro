@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import base64
 from time import sleep
 from urllib.request import urlopen

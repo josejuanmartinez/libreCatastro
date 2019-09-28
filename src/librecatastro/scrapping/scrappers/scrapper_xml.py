@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import urllib.parse
 from time import sleep
 
@@ -14,12 +17,19 @@ logger = CadastroLogger(__name__).logger
 
 
 class ScrapperXML(Scrapper):
+    """Class that manages the XML scrapping from the Cadastro webservices """
 
     def __init__(self):
         super().__init__()
 
     @classmethod
-    def get_coord(cls,x, y):
+    def scrap_coord(cls, x, y):
+        """
+        Scraps XML by coordinates
+        :param x: Longitude
+        :param y: Latitude
+        :return: DotMap dictionary with scrapped results
+        """
         params = {'SRS': 'EPSG:4326', 'Coordenada_X': x, 'Coordenada_Y': y}
         url = cls.URL_LOCATIONS_BASE.format("/OVCCoordenadas.asmx/Consulta_RCCOOR")
         response = requests.get(url, params=params)
@@ -33,12 +43,18 @@ class ScrapperXML(Scrapper):
         return xml_dict_map
 
     @classmethod
-    def get_cadaster_entries_by_cadaster(cls, prov_name, city_name, rc):
-        """ provincia and municipio are optional and can be set to '' """
+    def get_cadaster_entries_by_cadaster(cls, prov_name, city_name, cadaster):
+        """
+        Scraps XML by cadaster, prov_name (optional) and city_name (optional)
+        :param prov_name: Name of the province (can be set to '')
+        :param city_name: Name of the city (can be set to '')
+        :param cadaster: Cadaster code
+        :return: DotMap dictionary with scrapped results
+        """
 
         params = {"Provincia": prov_name,
                   "Municipio": city_name,
-                  "RC": rc}
+                  "RC": cadaster}
 
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/Consulta_DNPRC")
         logger.debug("URL for entry: {}".format(url + '?' + urllib.parse.urlencode(params)))
@@ -49,27 +65,40 @@ class ScrapperXML(Scrapper):
         return DotMap(xmltodict.parse(xml, process_namespaces=False, xml_attribs=False))
 
     @classmethod
-    def get_cadaster_entries_by_address(cls, provincia, municipio, sigla, calle, numero, bloque=None, escalera=None,
-                                        planta=None,puerta=None):
-        params = {'Provincia': provincia,
-                  'Municipio': municipio,
-                  'Sigla': sigla,
-                  'Calle': calle,
-                  'Numero': str(numero)}
-        if bloque:
-            params['Bloque'] = str(bloque)
+    def get_cadaster_entries_by_address(cls, prov_name, city_name, tv, nv, num, bl=None, es=None,
+                                        pl=None, pu=None):
+        """
+        Scraps XML by address
+        :param prov_name: Name of the province (can be set to '')
+        :param city_name: Name of the city (can be set to '')
+        :param tv: Kind of street (CL - Calle, AV - Avenida, etc)
+        :param nv: Name of street
+        :param num: Street number
+        :param bl: Block (Bloque)
+        :param es: Doorway (Escalera)
+        :param pl: Floor (Planta)
+        :param pu: Door (Puerta)
+        :return: DotMap dictionary with scrapped results
+        """
+        params = {'Provincia': prov_name,
+                  'Municipio': city_name,
+                  'Sigla': tv,
+                  'Calle': nv,
+                  'Numero': str(num)}
+        if bl:
+            params['Bloque'] = str(bl)
         else:
             params['Bloque'] = ''
-        if escalera:
-            params['Escalera'] = escalera
+        if es:
+            params['Escalera'] = es
         else:
             params['Escalera'] = ''
-        if planta:
-            params['Planta'] = str(planta)
+        if pl:
+            params['Planta'] = str(pl)
         else:
             params['Planta'] = ''
-        if puerta:
-            params['Puerta'] = str(puerta)
+        if pu:
+            params['Puerta'] = str(pu)
         else:
             params['Puerta'] = ''
 

@@ -21,7 +21,7 @@ logger = CadastroLogger(__name__).logger
 
 
 class ParserHTML(Parser):
-    """Parser class for Catastro HTML"""
+    """Class that manages the processing of scrapped HTML from Cadastro webpage"""
 
     def __init__(self):
         super().__init__()
@@ -35,6 +35,13 @@ class ParserHTML(Parser):
     """ Processing """
     @classmethod
     def process_search_by_coordinates(cls, x, y, pictures=False):
+        """
+        Searches by coordinate from HTML and processes the result.
+        :param x: longitude
+        :param y: latitude
+        :param pictures: True if we want house plan pictures to be scrapped
+        :return: List of CadasterEntry objects
+        """
         data = ScrapperHTML.scrap_coord(x, y)
 
         root = ElementTree.fromstring(data)
@@ -60,8 +67,15 @@ class ParserHTML(Parser):
         return results
 
     @classmethod
-    def process_search_by_provinces(cls, prov_list, pictures=False, start_from='', max_times=None):
-
+    def process_search_by_provinces(cls, prov_list, pictures=False, start_from='', matches=None):
+        """
+            Searches by province from HTML and processes the result.
+            :param prov_list: List of province names
+            :param start_from: Name of the city of the first province to start from
+            :param pictures: True if we want house plan pictures to be scrapped
+            :param matches: Max number of matches (for debugging purporses mainly)
+            :return: List of CadasterEntry objects
+        """
         times = 0
         results = []
 
@@ -129,7 +143,7 @@ class ParserHTML(Parser):
                         counter += 1
                         times += 1
 
-                        if max_times is not None and times >= max_times:
+                        if matches is not None and times >= matches:
                             return results
 
                 except urllib.error.HTTPError as e:
@@ -157,6 +171,13 @@ class ParserHTML(Parser):
     """ Parsing """
     @classmethod
     def parse_html_parcela(cls, parsed_html, x=None, y=None, picture=None):
+        """
+            Parses an HTML and crates a CadasterEntry object
+            :param x: longitude obtained previously
+            :param y: latitude obtained previously
+            :param pictures: base64 picture obtained previously
+            :return: CadasterEntry object
+        """
         description = parsed_html.find(id='ctl00_Contenido_tblInmueble')
 
         descriptive_data = dict()

@@ -18,11 +18,22 @@ logger = CadastroLogger(__name__).logger
 
 
 class CoordinatesSearcher(Searcher):
+    """
+    Class that inheritates from Searcher Abstract Class and implements
+    functions regarding coordinates search.
+    """
     def __init__(self):
         super().__init__()
 
     @classmethod
     def search_by_coordinates(cls, scrapper, filenames, pictures=False):
+        """
+        Function that searches Cadastro (HTML or XML) by coordinates
+        :param scrapper: HTMLScrapper or XMLScrapper classes
+        :param filenames: Names of the filenames with coordinates to scrap
+        :param pictures: Do we want to scrap house plan pictures?
+
+        """
         for r, d, files in os.walk(config['coordinates_path']):
             for file in files:
 
@@ -40,6 +51,14 @@ class CoordinatesSearcher(Searcher):
 
     @classmethod
     def search_in_polygon(cls, scrapper, polygon, pictures=False):
+        """
+        Function that searchs by coordinates strictly inside a Polygon
+        defined by the user.
+
+        :param scrapper: HTMLScrapper or XMLScrapper classes
+        :param polygon: a GeoPolygon class object
+        :param pictures: Do we want to scrap house plan pictures?
+        """
         bb = polygon.get_bounding_box()
         lon_min = int(bb[0] * config['scale'])
         lon_max = int(bb[2] * config['scale'])
@@ -78,6 +97,18 @@ class CoordinatesSearcher(Searcher):
 
     @staticmethod
     def search_by_coordinates_max_time(seconds, lon_min, lon_max, lat_min, lat_max, scrapper):
+        """
+        Function that allows searching in lon, lat for a maximum number of seconds.
+        Mainly used for debugging purposes.
+
+        :param seconds: Total of seconds to scrap
+        :param lon_min: Minimum longitude
+        :param lon_max: Maximum longitude
+        :param lat_min: Minimum latitude
+        :param lat_max: Maximum latitude
+        :param scrapper: HTML or XML Scrapper
+        :return: a List of CadasterEntry objects
+        """
         start_time = time.time()
         results = []
 
@@ -119,6 +150,18 @@ class CoordinatesSearcher(Searcher):
 
     @staticmethod
     def search_by_coordinates_linear_max_n_matches(matches, lon_min, lon_max, lat_min, lat_max, scrapper):
+        """
+            Function that allows searching in lon, lat for a maximum number of matches.
+            Mainly used for debugging purposes.
+
+            :param matches: Total of matches to scrap
+            :param lon_min: Minimum longitude
+            :param lon_max: Maximum longitude
+            :param lat_min: Minimum latitude
+            :param lat_max: Maximum latitude
+            :param scrapper: HTML or XML Scrapper
+            :return: a List of CadasterEntry objects
+        """
         results = []
         counter = matches
 
@@ -160,9 +203,21 @@ class CoordinatesSearcher(Searcher):
         return ListUtils.flat(results)
 
     @staticmethod
-    def search_by_coordinates_random_max_n_matches(times, lon_min, lon_max, lat_min, lat_max, parser):
+    def search_by_coordinates_random_max_n_matches(matches, lon_min, lon_max, lat_min, lat_max, scrapper):
+        """
+            Function that allows searching in lon, lat for a maximum number of matches.
+            Mainly used for debugging purposes.
+
+            :param matches: Total of matches to scrap
+            :param lon_min: Minimum longitude
+            :param lon_max: Maximum longitude
+            :param lat_min: Minimum latitude
+            :param lat_max: Maximum latitude
+            :param scrapper: HTML or XML Scrapper
+            :return: a List of CadasterEntry objects
+        """
         results = []
-        counter = times
+        counter = matches
         while counter > 0:
 
             x = random.randrange(lon_min, lon_max)
@@ -172,7 +227,7 @@ class CoordinatesSearcher(Searcher):
             y_scaled = y / config['scale']
 
             try:
-                cadaster_entry = parser.process_search_by_coordinates(x_scaled, y_scaled)
+                cadaster_entry = scrapper.process_search_by_coordinates(x_scaled, y_scaled)
 
                 if len(cadaster_entry) > 0:
                     results.append(cadaster_entry)
@@ -194,5 +249,5 @@ class CoordinatesSearcher(Searcher):
             sleep(config['sleep_time'])
 
         logger.debug("====PROCESSING FINISHED====")
-        logger.debug("Results found: {}".format(times))
+        logger.debug("Results found: {}".format(matches))
         return ListUtils.flat(results)
