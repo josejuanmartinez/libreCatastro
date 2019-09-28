@@ -41,8 +41,7 @@ to send to sleep at 23:00 and restart processing at 09:00 everyday
 ```
 0 23 * * * ps aux | grep "[l]ibreCadastro" | awk '{print $2}' | xargs kill -TSTP
 0 09 * * * ps aux | grep "[l]ibreCadastro" | awk '{print $2}' | xargs kill -CONT
-``
-
+```
 
 
 **Installation**
