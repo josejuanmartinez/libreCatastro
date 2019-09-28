@@ -10,7 +10,7 @@ from time import sleep
 from src.librecatastro.domain.geometry.geo_polygon import GeoPolygon
 from src.librecatastro.scrapping.searcher import Searcher
 from src.settings import config
-from src.utils.cadastro_logger import CadastroLogger
+from src.utils.catastro_logger import CadastroLogger
 from src.utils.list_utils import ListUtils
 
 '''Logger'''

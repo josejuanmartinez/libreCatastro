@@ -11,7 +11,7 @@ import xmltodict
 from dotmap import DotMap
 
 from src.settings import config
-from src.utils.cadastro_logger import CadastroLogger
+from src.utils.catastro_logger import CadastroLogger
 
 '''Logger'''
 logger = CadastroLogger(__name__).logger
@@ -21,7 +21,7 @@ class Scrapper:
     """Scrapper class, from which inheritates ScrapperHTML and ScrapperXML, and which
     implements common scrapping functions for both HTML and XML"""
 
-    '''Catastro web services parametrized'''
+    '''libreCatastro web services parametrized'''
 
     URL_PICTURES = "https://www1.sedecatastro.gob.es/Cartografia/GeneraGraficoParcela.aspx?del={}&mun={}&refcat={}&AnchoPixels={}&AltoPixels={}"
     URL_LOCATIONS_BASE = "http://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC{}"
@@ -31,7 +31,7 @@ class Scrapper:
 
     @classmethod
     def get_provinces(cls):
-        """Get all provinces registered by Catastro (call only available from XML but used in both XML and HTML)"""
+        """Get all provinces registered by libreCatastro (call only available from XML but used in both XML and HTML)"""
 
         url = cls.URL_LOCATIONS_BASE.format("/OVCCallejero.asmx/ConsultaProvincia")
         response = requests.get(url)
@@ -43,7 +43,7 @@ class Scrapper:
     @classmethod
     def get_cities(cls, prov_name, city_name=None):
         """
-        Get all cities registered by Catastro (call only available from XML but used in both XML and HTML)
+        Get all cities registered by libreCatastro (call only available from XML but used in both XML and HTML)
         :param prov_name: Name of the province (from Cadaster Province List)
         :param city_name: Optional. Name of the city (from Cadaster City List) in case a specific city is required
         :return: DotMap (dict with properties accessible by '.') with all the cities
@@ -63,7 +63,7 @@ class Scrapper:
     @classmethod
     def get_addresses(cls, prov_name, city_name, tv=None, nv=None):
         """
-        Get all addresses registered by Catastro (call only available from XML but used in both XML and HTML)
+        Get all addresses registered by libreCatastro (call only available from XML but used in both XML and HTML)
 
         :param prov_name: Name of the province (from Cadaster Province List)
         :param city_name: Name of the city (from Cadaster City List)

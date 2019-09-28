@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 from src.librecatastro.scrapping.scrapper import Scrapper
 from src.settings import config
-from src.utils.cadastro_logger import CadastroLogger
+from src.utils.catastro_logger import CadastroLogger
 
 '''Logger'''
 logger = CadastroLogger(__name__).logger

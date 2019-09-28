@@ -8,7 +8,7 @@ from dotmap import DotMap
 from elasticsearch import Elasticsearch
 
 from src.settings import config
-from src.utils.cadastro_logger import CadastroLogger
+from src.utils.catastro_logger import CadastroLogger
 from src.utils.json_encoder import JSONEncoder
 
 '''Logger'''

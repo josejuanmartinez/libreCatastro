@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from src.utils.cadastro_logger import CadastroLogger
+from src.utils.catastro_logger import CadastroLogger
 
 logger = CadastroLogger(__name__).logger
 

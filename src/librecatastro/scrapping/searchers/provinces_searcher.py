@@ -3,7 +3,7 @@
 
 from src.librecatastro.scrapping.scrapper import Scrapper
 from src.librecatastro.scrapping.searcher import Searcher
-from src.utils.cadastro_logger import CadastroLogger
+from src.utils.catastro_logger import CadastroLogger
 
 '''Logger'''
 logger = CadastroLogger(__name__).logger

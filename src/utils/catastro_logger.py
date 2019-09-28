@@ -10,7 +10,7 @@ from src.settings import config
 
 
 class CadastroLogger:
-    """Custom logger for keeping track of the Catastro Scrapping"""
+    """Custom logger for keeping track of the libreCatastro Scrapping"""
 
     def __init__(self, class_name):
         """Constructor"""

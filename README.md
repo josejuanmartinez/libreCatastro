@@ -2,7 +2,7 @@
 An opensource, MIT-licensed application that scraps the official Spanish 
 Cadaster registry and stores information in Elastic Searcher.
 
-![libreCadastro example](https://drive.google.com/uc?export=view&id=1kisisDNmrQ5ZBWNzqnSzF0AsHu6-zS-P "libreCadsatro example")
+![libreCatastro example](https://drive.google.com/uc?export=view&id=1kisisDNmrQ5ZBWNzqnSzF0AsHu6-zS-P "libreCadsatro example")
 
 **Features**
 
@@ -35,7 +35,14 @@ Spanish Cadaster has set restrictions, banning temporarily IPs that more than 10
 queries in 5 seconds. A sleep command has been set to 5sec where needed, and can be configured
 at your own risk.
 
-UPDATE: At night DoS happens more often it seems, and 5sec can throw a `Connection Reset by Peer` message.
+At night DoS happens more often it seems, and 5sec can throw a `Connection Reset by Peer` message.
+To try to avoid this, add this two cron commands after having launched libreCatastro
+to send to sleep at 23:00 and restart processing at 09:00 everyday
+```
+0 23 * * * ps aux | grep "[l]ibreCadastro" | awk '{print $2}' | xargs kill -TSTP
+0 09 * * * ps aux | grep "[l]ibreCadastro" | awk '{print $2}' | xargs kill -CONT
+``
+
 
 
 **Installation**
@@ -50,20 +57,20 @@ Then configure ElasticSearch index:
 python3 initialize_elasticsearch.py
 ```
 
-An finally, execute libreCadastro as follows in the next step.
+An finally, execute libreCatastro as follows in the next step.
 
 **Execution**
 ```
-$ python libreCadastro.py --help
+$ python libreCatastro.py --help
 
-usage: libreCadastro.py [-h] [--coords]
+usage: libreCatastro.py [-h] [--coords]
                         [--filenames FILENAMES [FILENAMES ...]]
                         [--provinces PROVINCES [PROVINCES ...]]
                         [--sleep SLEEP] [--html] [--scale SCALE] [--pictures]
                         [--startcity STARTCITY] [--listprovinces]
                         [--listcities LISTCITIES] [--health]
 
-Runs libreCadastro
+Runs libreCatastro
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -82,7 +89,7 @@ optional arguments:
  
 **Health**
 I highly recommend to execute first of all:
-`python3 libreCadastro.py --health` to check if XML and HTML servers are up.
+`python3 libreCatastro.py --health` to check if XML and HTML servers are up.
 
 **Time to get the complete DB**
 Taking into account that there are restrictions that prevents a crapping faster than 5sec per page,

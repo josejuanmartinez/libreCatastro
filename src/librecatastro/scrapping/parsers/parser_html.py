@@ -13,7 +13,7 @@ from src.librecatastro.scrapping.scrapper import Scrapper
 from src.librecatastro.scrapping.scrappers.scrapper_html import ScrapperHTML
 from src.settings import config
 
-from src.utils.cadastro_logger import CadastroLogger
+from src.utils.catastro_logger import CadastroLogger
 from src.utils.elasticsearch_utils import ElasticSearchUtils
 
 '''Logger'''

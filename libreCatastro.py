@@ -17,7 +17,7 @@ from XML, based on coordinates files or a list of provinces, etc """
 
 if __name__ == "__main__":
     ''' Definition of command line arguments for ArgumentParser '''
-    parser = argparse.ArgumentParser(description='Runs libreCadastro')
+    parser = argparse.ArgumentParser(description='Runs libreCatastro')
     parser.add_argument('--coords', action='store_true', dest='coords', default=False)
     parser.add_argument('--coords-filenames', action='store', nargs='+', dest='filenames', default=[])
     parser.add_argument('--provinces', action='store', nargs='+', dest='provinces', default=[])

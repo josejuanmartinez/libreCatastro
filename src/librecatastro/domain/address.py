@@ -5,13 +5,13 @@ import re
 
 from src.settings import config
 
-from src.utils.cadastro_logger import CadastroLogger
+from src.utils.catastro_logger import CadastroLogger
 
 logger = CadastroLogger(__name__).logger
 
 
 class Address:
-    """ Domain class for storing Address in Catastro parsers"""
+    """ Domain class for storing Address in libreCatastro parsers"""
 
     def __init__(self, address):
         self.full_address = address.strip()

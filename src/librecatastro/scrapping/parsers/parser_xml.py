@@ -8,7 +8,7 @@ from src.librecatastro.domain.cadaster_entry.cadaster_entry_xml import CadasterE
 from src.librecatastro.scrapping.parser import Parser
 from src.librecatastro.scrapping.scrapper import Scrapper
 from src.librecatastro.scrapping.scrappers.scrapper_xml import ScrapperXML
-from src.utils.cadastro_logger import CadastroLogger
+from src.utils.catastro_logger import CadastroLogger
 
 from dotmap import DotMap
 

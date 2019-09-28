@@ -10,7 +10,7 @@ from src.librecatastro.domain.cadaster_entry.cadaster_entry import CadasterEntry
 from src.librecatastro.domain.construction import Construction
 from src.librecatastro.domain.location import Location
 from src.settings import config
-from src.utils.cadastro_logger import CadastroLogger
+from src.utils.catastro_logger import CadastroLogger
 
 logger = CadastroLogger(__name__).logger
 
