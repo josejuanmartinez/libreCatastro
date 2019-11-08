@@ -3,6 +3,7 @@
 
 import sys
 import argparse
+import pprint
 
 from src.librecatastro.scrapping.parsers.parser_html import ParserHTML
 from src.librecatastro.scrapping.parsers.parser_xml import ParserXML
@@ -54,6 +55,9 @@ if __name__ == "__main__":
         ServerHealthTests.healthcheck()
         exit(0)
 
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(config)
+    
     ''' Scrapping / Parsing core functionality'''
     parser = ParserHTML if args.html else ParserXML
 
