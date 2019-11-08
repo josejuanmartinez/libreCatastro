@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(config)
-    
+
     ''' Scrapping / Parsing core functionality'''
     parser = ParserHTML if args.html else ParserXML
 

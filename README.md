@@ -48,7 +48,8 @@ to send to sleep at 23:00 and restart processing at 09:00 everyday
 
 Having Docker and Docker-compose installed, run first:
 ```
-docker-compose up -d 
+docker-compose up -d
+pip install -r requirements.txt
 ```
 
 Then configure ElasticSearch index:
@@ -96,3 +97,19 @@ scrapping can take very long time. so:
 1) Go directly to the provinces / cities you need the most. Leave the rest for later.
 2) Use different IP addresses and query parallely.
 3) Write me an email to jjmcarrascosa@gmail.com to get the full DB.
+
+**Using additional machines (parallel extraction)**
+You won't need to repeat the previous steps, because we will use one Elastic Search for all the machines.
+For additional machines, do the following:
+1) Make sure you have successfully run all the previous steps and ElasticSearch is running in one machine;
+2) Copy the pubic IP address of that machine
+3) In a new machine, clone this repository and do the following:
+```
+pip install -r requirements.txt
+export ES_HOST="{IP OR HOST OF THE MACHINE RUNNING ELASTICSEARCH"
+export ES_PORT="{PORT OF THE MACHINE RUNNING ELASTICSEARCH. USUALLY 9200}"
+```
+And finally, run libreCatastro:
+```
+python libreCatastro.py [....]
+```
