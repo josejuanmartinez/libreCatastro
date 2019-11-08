@@ -45,7 +45,7 @@ class CadasterEntry:
 
     def to_elasticsearch(self):
         """ Gets stored in elastic search """
-        es = Elasticsearch()
+        es = Elasticsearch(hosts=[config['elasticsearch-host']], port=config['elasticsearch-port'])
         res = None
         try:
             body = json.dumps(self.to_json(), cls=JSONEncoder,sort_keys=True,
@@ -61,7 +61,7 @@ class CadasterEntry:
     def from_elasticsearch(self):
         """ Confirms for checking purposes that the entry has been stored in elastic search previously """
         res = False
-        es = Elasticsearch()
+        es = Elasticsearch(hosts=[config['elasticsearch-host']], port=config['elasticsearch-port'])
         try:
             query = '{"query":{"bool":{"must":[{"match":{"cadaster":"' + self.cadaster + '"}}],"must_not":[],"should":[]}},"from":0,"size":10,"sort":[],"aggs":{}}'
             res = es.search(index=config['elasticsearch-index'], body=query)
