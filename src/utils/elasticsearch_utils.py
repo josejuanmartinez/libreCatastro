@@ -22,7 +22,8 @@ class ElasticSearchUtils:
         Creates index in ElasticSearch
         """
         ElasticSearchUtils.remove_index()
-        es = Elasticsearch(hosts=[config['elasticsearch-host']], port=config['elasticsearch-port'])
+        es = Elasticsearch(hosts=[config['elasticsearch-host']], port=config['elasticsearch-port'],
+                           http_auth=(config['elasticsearch-user'], config['elasticsearch-pass']))
         request_body = {
             "settings": {
                 "number_of_shards": 5,
@@ -85,7 +86,8 @@ class ElasticSearchUtils:
         """
         Removes index from ElasticSearch
         """
-        es = Elasticsearch(hosts=[config['elasticsearch-host']], port=config['elasticsearch-port'])
+        es = Elasticsearch(hosts=[config['elasticsearch-host']], port=config['elasticsearch-port'],
+                           http_auth=(config['elasticsearch-user'], config['elasticsearch-pass']))
         logger.debug("Deleting 'cadaster' index...")
         try:
             res = es.indices.delete(index='cadaster', ignore=[400, 404])
@@ -119,7 +121,8 @@ class ElasticSearchUtils:
                  "size":11,
                  "sort":[],
                  "aggs":{}}
-        es = Elasticsearch(hosts=[config['elasticsearch-host']], port=config['elasticsearch-port'])
+        es = Elasticsearch(hosts=[config['elasticsearch-host']], port=config['elasticsearch-port'],
+                           http_auth=(config['elasticsearch-user'], config['elasticsearch-pass']))
         try:
             res = es.search(index=config['elasticsearch-index'], body=query)
             hits = res['hits']['total']['value']

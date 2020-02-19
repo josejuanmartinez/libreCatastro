@@ -20,6 +20,8 @@ config = {
     "sleep_dos_time": 300,
     "width_px": 120,
     "height_px": 120,
+    "elasticsearch-user": environ.get("ES_USER") if environ.get('ES_USER') is not None else '',
+    "elasticsearch-pass": environ.get("ES_PASS") if environ.get('ES_PASS') is not None else '',
     "elasticsearch-host": environ.get('ES_HOST') if environ.get('ES_HOST') is not None else "localhost",
     "elasticsearch-port": environ.get('ES_PORT') if environ.get('ES_PORT') is not None else "9200",
     "servers_down_message_001": "Error 001: Cadastro server to get provinces and cities is down.\n"
