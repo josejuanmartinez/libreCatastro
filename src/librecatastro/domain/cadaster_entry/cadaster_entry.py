@@ -50,7 +50,7 @@ class CadasterEntry:
         try:
             body = json.dumps(self.to_json(), cls=JSONEncoder,sort_keys=True,
                     indent=4, separators=(',', ': '))
-            res = es.index(index=config['elasticsearch-index'], doc_type='cadaster_doc', id=self.cadaster, body=body)
+            res = es.index(index=config['elasticsearch-index'], doc_type='_doc', id=self.cadaster, body=body)
         except Exception as e:
             logger.error(e)
 

@@ -1,44 +1,46 @@
-# ./docker-compose.yml
-
-version: '3'
+version: '3.2'
 
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.0
     volumes:
       - ${ELK_DATA}/elasticsearch:/usr/share/elasticsearch/data:rw
-    hostname: elasticsearch
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
     ports:
       - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      # Use single node discovery in order to disable production mode and avoid bootstrap checks
+      # see https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
+      discovery.type: single-node
     networks:
-    - ELK
-  kibana:
-    image: docker.elastic.co/kibana/kibana:6.3.2
-    hostname: kibana
+      - elk
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.5.0
+    ports:
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
     depends_on:
-    - elasticsearch
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.5.0
     ports:
       - "5601:5601"
     networks:
-    - ELK
-  logstash:
-    image: docker.elastic.co/logstash/logstash:6.3.2
+      - elk
     depends_on:
-    - elasticsearch
-    volumes:
-      - ${ELK_DATA}/logstash/csv:/shared:rw
-    hostname: logstash
-    networks:
-    - ELK
+      - elasticsearch
 
 networks:
-  ELK:
-    driver: "bridge"
+  elk:
+    driver: bridge
+
+volumes:
+  elasticsearch:

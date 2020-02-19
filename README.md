@@ -2,6 +2,9 @@
 An opensource, MIT-licensed application that scraps the official Spanish 
 Cadaster registry and stores information in Elastic Searcher.
 
+For ELK Stack < 7, see branch 'develop'. For 7<x<8, see branch '7.5'.
+ELK integration tested and optimized for 7.5.
+
 ![libreCatastro example](https://drive.google.com/uc?export=view&id=1kisisDNmrQ5ZBWNzqnSzF0AsHu6-zS-P "libreCadsatro example")
 
 **Features**

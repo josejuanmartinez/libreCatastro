@@ -30,7 +30,6 @@ class ElasticSearchUtils:
             },
 
             "mappings": {
-                "cadaster_doc": {
                     "properties": {
                         "location": {
                             "type": "geo_point"
@@ -71,7 +70,6 @@ class ElasticSearchUtils:
                         }
                     ]
                 },
-            }
         }
         logger.debug("Creating 'cadaster' index...")
         try:
@@ -123,10 +121,8 @@ class ElasticSearchUtils:
                  "aggs":{}}
         es = Elasticsearch(hosts=[config['elasticsearch-host']], port=config['elasticsearch-port'])
         try:
-            res = es.search(config['elasticsearch-index'], config['elasticsearch-doc'], query)
-            hits = DotMap(res).hits.total
-            if hits == DotMap():
-                hits = 0
+            res = es.search(index=config['elasticsearch-index'], body=query)
+            hits = res['hits']['total']['value']
             res = (hits > 0)
         except Exception as e:
             logger.debug(e)

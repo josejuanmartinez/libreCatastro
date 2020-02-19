@@ -1,6 +1,6 @@
 dotmap
 shapely
 beautifulsoup4==4.8.0
-elasticsearch>=6.0.0,<7.0.0
+elasticsearch>=7.0.0,<8.0.0
 requests==2.22.0
 xmltodict==0.12.0
